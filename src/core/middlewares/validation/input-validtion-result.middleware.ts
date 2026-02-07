@@ -15,7 +15,7 @@ export const inputValidationResultMiddleware = (req: Request, res: Response, nex
     const errors = validationResult(req).formatWith(formatErrors).array({onlyFirstError: true});
 
     if(errors.length) {
-        res.status(HttpStatus.BadRequest).send(errors)
+        res.status(HttpStatus.BadRequest).send({errorsMessages: errors})
         return
     }
 
