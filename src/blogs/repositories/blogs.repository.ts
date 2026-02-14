@@ -1,35 +1,43 @@
 import {Blog} from "../types/blog";
-import {db} from "../../db/in-memory.db";
 import {BlogInputDto} from "../dto/blog.input-dto";
+import {ObjectId, WithId} from "mongodb";
+import {blogCollection} from "../../db/mongo.db";
 
 export const blogsRepository = {
-    getAll(): Blog[] {
-        return db.blogs;
+    async getAll(): Promise<WithId<Blog>[]> {
+        return blogCollection.find().toArray();
     },
 
-    findById(id: string): Blog | null {
-        return db.blogs.find(blog => blog.id === id) || null;
+    async findById(id: string): Promise<WithId<Blog> | null> {
+        return blogCollection.findOne({_id: new ObjectId(id)})
     },
 
-    create(blog: Blog) {
-        db.blogs.push(blog);
+    async create(blog: Blog): Promise<WithId<Blog>> {
+        const createResult = await blogCollection.insertOne(blog);
+        return {_id: createResult.insertedId, ...blog};
     },
 
-    update(blog: Blog, dto: BlogInputDto) {
-        const {name, description, websiteUrl} = dto;
-        blog.name = name
-        blog.description = description
-        blog.websiteUrl = websiteUrl
-    },
-
-    delete(id: string): boolean {
-        const index = db.blogs.findIndex((b) => b.id === id);
-
-        if (index === -1) {
-            return false;
+    async update(id: string, dto: BlogInputDto): Promise<void> {
+        const {name, description, websiteUrl} = dto
+        const updatedBlog = await blogCollection.updateOne(
+            {
+                _id: new ObjectId(id)
+            },
+            {
+                $set: {
+                    name,
+                    description,
+                    websiteUrl
+                }
+            }
+        );
+        if(updatedBlog.matchedCount < 1) {
+            throw new Error('Blog not exist');
         }
+    },
 
-        db.blogs.splice(index, 1);
-        return true;
+    async delete(id: string) {
+        const deletedResult = await blogCollection.deleteOne({_id: new ObjectId(id)})
+        return deletedResult.deletedCount >= 1;
     }
 }

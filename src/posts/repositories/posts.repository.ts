@@ -1,36 +1,37 @@
 import {Post} from "../types/post";
-import {db} from "../../db/in-memory.db";
 import {PostInputDto} from "../dto/post.input-dto";
+import {ObjectId, WithId} from "mongodb";
+import {postCollection} from "../../db/mongo.db";
 
 export const postsRepository = {
-    getAll(): Post[] {
-        return db.posts;
+    async getAll(): Promise<WithId<Post>[]> {
+        return postCollection.find().toArray();
     },
 
-    getById(id: string): Post | null {
-        return db.posts.find(post => post.id === id) || null;
+    async getById(id: string): Promise<WithId<Post> | null> {
+        return postCollection.findOne({_id: new ObjectId(id)});
     },
 
-    create(post: Post) {
-        db.posts.push(post);
+    async create(post: Post): Promise<WithId<Post>> {
+        const createResult = await postCollection.insertOne(post);
+        return {_id: createResult.insertedId, ...post};
     },
 
-    update(post: Post, dto: PostInputDto) {
+    async update(id: string, dto: PostInputDto): Promise<void> {
         const {title, shortDescription, content, blogId} = dto
-        post.title = title
-        post.shortDescription = shortDescription
-        post.content = content
-        post.blogId = blogId
+        const updatedResult = await postCollection.updateOne(
+            {
+                _id: new ObjectId(id),
+            },
+            {$set: {title, shortDescription, content, blogId}},
+        )
+        if(updatedResult.matchedCount < 1) {
+            throw new Error('Post not exist')
+        }
     },
 
-    delete(id: string): boolean {
-        const index = db.posts.findIndex((p) => p.id === id);
-
-        if (index === -1) {
-            return false;
-        }
-
-        db.posts.splice(index, 1);
-        return true;
+    async delete(id: string):Promise<boolean> {
+        const deleteResult = await postCollection.deleteOne({_id: new ObjectId(id)});
+        return deleteResult.deletedCount >= 1;
     }
 }

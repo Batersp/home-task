@@ -4,17 +4,23 @@ import {Post} from "../../types/post";
 import {db} from "../../../db/in-memory.db";
 import {postsRepository} from "../../repositories/posts.repository";
 import {HttpStatus} from "../../../core/types/http-statuses";
+import {mapToPostViewModel} from "../mappers/map-to-post-view-model.util";
 
-export function createPostHandler(req: Request<{}, Post, PostInputDto>, res: Response) {
-    const {title, shortDescription, content, blogId} = req.body;
-    const post: Post = {
-        id: db.posts.length ? (+db.posts[db.posts.length - 1].id + 1).toString() : '1',
-        title,
-        shortDescription,
-        content,
-        blogId,
-        blogName: '1'
+export async function createPostHandler(req: Request<{}, Post, PostInputDto>, res: Response) {
+    try {
+        const {title, shortDescription, content, blogId} = req.body;
+        const post: Post = {
+            title,
+            shortDescription,
+            content,
+            blogId,
+            blogName: '1',
+            createdAt: new Date().toISOString()
+        }
+        const createdPost = await postsRepository.create(post)
+        const postViewModel = mapToPostViewModel(createdPost)
+        res.status(HttpStatus.Created).send(postViewModel)
+    } catch {
+        res.sendStatus(HttpStatus.InternalServerError)
     }
-    postsRepository.create(post)
-    res.status(HttpStatus.Created).send(post)
 }

@@ -11,6 +11,5 @@ export const setupApp = (app: Express) => {
     app.use(POSTS_PATH, postsRouter);
     app.use(TESTING_PATH, testingRouter);
 
-
     return app;
 };

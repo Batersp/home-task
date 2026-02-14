@@ -1,8 +1,6 @@
 import {Request, Response, NextFunction} from "express";
 import {HttpStatus} from "../../core/types/http-statuses";
-
-export const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'qwerty';
+import {SETTINGS} from "../../core/settings/settings";
 
 export const superAdminGuardMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const auth = req.headers.authorization;
@@ -21,7 +19,7 @@ export const superAdminGuardMiddleware = (req: Request, res: Response, next: Nex
     const decodedToken = Buffer.from(token, 'base64').toString('utf-8');
     const [userName, password] = decodedToken.split(':')
 
-    if(userName !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    if(userName !== SETTINGS.ADMIN_USERNAME || password !== SETTINGS.ADMIN_PASSWORD) {
         res.sendStatus(HttpStatus.Unauthorized);
         return;
     }
