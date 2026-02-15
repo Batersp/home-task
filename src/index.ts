@@ -7,7 +7,7 @@ const bootstrap = async () => {
     const app = express()
     setupApp(app);
     const PORT = SETTINGS.PORT;
-    await runDB(SETTINGS.MONGO_URL)
+    await runDB()
     app.listen(PORT, () => {
         console.log(`Example app listening on port ${PORT}`);
     });

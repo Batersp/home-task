@@ -1,7 +1,6 @@
 import {Request, Response} from 'express'
 import {PostInputDto} from "../../dto/post.input-dto";
 import {Post} from "../../types/post";
-import {db} from "../../../db/in-memory.db";
 import {postsRepository} from "../../repositories/posts.repository";
 import {HttpStatus} from "../../../core/types/http-statuses";
 import {mapToPostViewModel} from "../mappers/map-to-post-view-model.util";

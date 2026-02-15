@@ -1,6 +1,5 @@
 import {Request, Response} from "express";
 import {Blog} from "../../types/blog";
-import {db} from "../../../db/in-memory.db";
 import {BlogInputDto} from "../../dto/blog.input-dto";
 import {HttpStatus} from "../../../core/types/http-statuses";
 import {blogsRepository} from "../../repositories/blogs.repository";
