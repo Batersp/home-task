@@ -23,7 +23,7 @@ export const postsRepository = {
 
         const items = await postCollection
             .find(filter)
-            .sort({[sortBy]: sortDirection})
+            .sort({[sortBy]: sortDirection, 'createdAt': sortDirection || -1})
             .skip(skip)
             .limit(pageSize)
             .toArray();
