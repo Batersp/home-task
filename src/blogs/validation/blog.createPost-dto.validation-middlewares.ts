@@ -33,18 +33,8 @@ const contentValidation = body('content')
     .isLength({max: 1000})
     .withMessage('content can not be more than 1000 characters')
 
-const blogIdValidation = body('blogId')
-    .exists()
-    .withMessage('blogId is required')
-    .isString()
-    .withMessage('blogId should be string')
-    .trim()
-    .notEmpty()
-    .withMessage('blogId can not be empty')
-
-export const postInputDtoValidation = [
+export const blogCreatePostDtoValidationMiddlewares = [
     titleValidation,
     shortDescriptionValidation,
     contentValidation,
-    blogIdValidation
 ]

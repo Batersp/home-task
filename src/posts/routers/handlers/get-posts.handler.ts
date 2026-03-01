@@ -1,12 +1,19 @@
 import {Request, Response} from 'express'
 import {HttpStatus} from "../../../core/types/http-statuses";
-import {postsRepository} from "../../repositories/posts.repository";
 import {mapToPostViewModel} from "../mappers/map-to-post-view-model.util";
+import {postsService} from "../../aplication/posts.service";
+import {matchedData} from "express-validator";
+import {PostsQuery} from "../../types/get-posts-query";
 
 export async function getPostsHandler(req: Request, res: Response) {
     try {
-        const posts = await postsRepository.getAll()
-        res.status(HttpStatus.Ok).send(posts.map(mapToPostViewModel))
+        const sanitizedQuery = matchedData<PostsQuery>(req, {
+            locations: ['query'],
+            includeOptionals: true,
+        })
+        const postsResponse = await postsService.findMany(sanitizedQuery)
+        const postsViewModel = {...postsResponse, items: postsResponse.items.map(mapToPostViewModel)}
+        res.status(HttpStatus.Ok).send(postsViewModel)
     } catch {
         res.sendStatus(HttpStatus.InternalServerError)
     }

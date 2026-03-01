@@ -8,11 +8,12 @@ import {createPostHandler} from "./handlers/create-post.handler";
 import {updatePostHandler} from "./handlers/update-post.handler";
 import {deletePostHandler} from "./handlers/delete-post.handler";
 import {superAdminGuardMiddleware} from "../../auth/middlewares/super-admin.guard-middleware";
+import {postPaginationAndSortingValidation} from "../validation/post.paginationAndSorting.validation-middlewares";
 
 export const postsRouter = Router({})
 
 postsRouter
-    .get('', getPostsHandler)
+    .get('', postPaginationAndSortingValidation, inputValidationResultMiddleware, getPostsHandler)
     .get('/:id',idValidation, inputValidationResultMiddleware, getPostHandler)
     .post('', superAdminGuardMiddleware, postInputDtoValidation, inputValidationResultMiddleware, createPostHandler)
     .put('/:id', superAdminGuardMiddleware, idValidation, postInputDtoValidation, inputValidationResultMiddleware, updatePostHandler)

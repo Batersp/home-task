@@ -1,13 +1,12 @@
 import {Request, Response} from 'express'
-import {postsRepository} from "../../repositories/posts.repository";
 import {HttpStatus} from "../../../core/types/http-statuses";
+import {postsService} from "../../aplication/posts.service";
+import {PostInputDto} from "../../dto/post.input-dto";
 
-export async function updatePostHandler(req: Request<{id: string}>, res: Response) {
-    const id = req.params.id;
+export async function updatePostHandler(req: Request<{id: string}, {}, PostInputDto>, res: Response) {
     try {
-        const post = await postsRepository.getById(id)
-        if (post) {
-            await postsRepository.update(id, req.body)
+        const isUpdated = await postsService.update(req.params.id, req.body)
+        if (isUpdated) {
             res.sendStatus(HttpStatus.NoContent)
             return;
         }
