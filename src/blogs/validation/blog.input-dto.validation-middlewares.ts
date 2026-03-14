@@ -33,7 +33,7 @@ const websiteUrlValidation = body('websiteUrl')
     .isLength({ max: 100})
     .withMessage('WebsiteUrl can not be more than 100 characters')
     .matches('^https://([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$')
-    .withMessage('WebsiteUrl must be like url adress')
+    .withMessage('WebsiteUrl must be like url address')
 
 export const blogInputDtoValidation = [
     nameValidation,

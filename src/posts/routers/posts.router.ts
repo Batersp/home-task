@@ -7,7 +7,7 @@ import {postInputDtoValidation} from "../validation/post.input-dto.validation-mi
 import {createPostHandler} from "./handlers/create-post.handler";
 import {updatePostHandler} from "./handlers/update-post.handler";
 import {deletePostHandler} from "./handlers/delete-post.handler";
-import {superAdminGuardMiddleware} from "../../auth/middlewares/super-admin.guard-middleware";
+import {superAdminGuardMiddleware} from "../../auth/validation/super-admin.guard-middleware";
 import {postPaginationAndSortingValidation} from "../validation/post.paginationAndSorting.validation-middlewares";
 
 export const postsRouter = Router({})
