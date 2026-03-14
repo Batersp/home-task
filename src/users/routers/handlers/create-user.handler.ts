@@ -3,7 +3,7 @@ import {usersService} from "../../aplication/users.service";
 import {UserInputDto} from "../../dto/user.input-dto";
 import {UserViewModel} from "../../types/user-view-model";
 import {HttpStatus} from "../../../core/types/http-statuses";
-import {mapToUserViewModel} from "../mappers/map-to-user-view-model.util";
+import {usersQwRepository} from "../../repositories/usersQw.repository";
 
 export async function createUsersHandler(req: Request<{}, UserViewModel, UserInputDto>, res: Response) {
     try {
@@ -15,9 +15,12 @@ export async function createUsersHandler(req: Request<{}, UserViewModel, UserInp
             return
         }
 
-        const createdUser = await usersService.findById(createdUserId)
-        const userViewModel = mapToUserViewModel(createdUser!)
-        res.status(HttpStatus.Created).send(userViewModel)
+        const createdUser = await usersQwRepository.findById(createdUserId)
+        if(createdUser) {
+            res.status(HttpStatus.Created).send(createdUser)
+            return
+        }
+        res.sendStatus(HttpStatus.InternalServerError)
     } catch {
         res.sendStatus(HttpStatus.InternalServerError)
     }

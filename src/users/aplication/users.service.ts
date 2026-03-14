@@ -1,18 +1,10 @@
-import {User, UsersResponse} from "../types/user";
+import {User} from "../types/user";
 import {usersRepository} from "../repositories/users.repository";
-import {UsersQuery} from "../types/get-users-query";
 import {ObjectId, WithId} from "mongodb";
 import {UserInputDto} from "../dto/user.input-dto";
 import bcrypt from "bcrypt";
 
 export const usersService = {
-    async findMany(query: UsersQuery): Promise<UsersResponse> {
-        return usersRepository.findMany(query);
-    },
-
-    async findById(id: ObjectId): Promise<WithId<User> | null> {
-        return usersRepository.findById(id)
-    },
 
     async create(dto: UserInputDto): Promise<ObjectId | null> {
         const {login, password, email} = dto

@@ -1,14 +1,12 @@
 import { Request, Response } from 'express';
 import {HttpStatus} from "../../../core/types/http-statuses";
-import {mapToBlogViewModel} from "../mappers/map-to-blog-view-model.util";
-import {blogsService} from "../../aplication/blogs.service";
+import {blogsQwRepository} from "../../repositories/blogsQw.repository";
 
 export async function getBlogHandler(req: Request<{id: string}>, res: Response) {
     try {
-        const blog = await blogsService.findById(req.params.id);
+        const blog = await blogsQwRepository.findById(req.params.id);
         if(blog) {
-            const blogViewModel = mapToBlogViewModel(blog);
-            res.status(HttpStatus.Ok).send(blogViewModel)
+            res.status(HttpStatus.Ok).send(blog)
             return
         }
         res.sendStatus(HttpStatus.NotFound)

@@ -2,13 +2,12 @@ import { Request, Response } from 'express';
 import {HttpStatus} from "../../../core/types/http-statuses";
 import {matchedData} from "express-validator";
 import {PostsQuery} from "../../../posts/types/get-posts-query";
-import {postsService} from "../../../posts/aplication/posts.service";
-import {mapToPostViewModel} from "../../../posts/routers/mappers/map-to-post-view-model.util";
-import {blogsService} from "../../aplication/blogs.service";
+import {blogsQwRepository} from "../../repositories/blogsQw.repository";
+import {postsQwRepository} from "../../../posts/repositories/postsQw.repository";
 
 export async function getBlogPostsHandler(req: Request<{id: string}, {}, {}>, res: Response): Promise<void> {
     try {
-        const currentBlog = await blogsService.findById(req.params.id);
+        const currentBlog = await blogsQwRepository.findById(req.params.id);
         if(!currentBlog) {
             res.sendStatus(HttpStatus.NotFound)
             return
@@ -17,9 +16,8 @@ export async function getBlogPostsHandler(req: Request<{id: string}, {}, {}>, re
             locations: ['query'],
             includeOptionals: true,
         })
-        const postsResponse = await postsService.findMany(sanitizedQuery, req.params.id);
-        const postsViewModel = {...postsResponse, items: postsResponse.items.map(mapToPostViewModel)}
-        res.status(HttpStatus.Ok).send(postsViewModel)
+        const postsResponse = await postsQwRepository.findMany(sanitizedQuery, req.params.id);
+        res.status(HttpStatus.Ok).send(postsResponse)
     } catch {
         res.sendStatus(HttpStatus.InternalServerError)
     }

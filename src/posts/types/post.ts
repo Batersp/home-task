@@ -1,4 +1,4 @@
-import {WithId} from "mongodb";
+import {PostViewModel} from "./post-view-model";
 
 export type Post = {
     title: string
@@ -14,5 +14,5 @@ export type PostsResponse = {
     page: number,
     pageSize: number,
     totalCount: number,
-    items: WithId<Post>[]
+    items: PostViewModel[]
 }

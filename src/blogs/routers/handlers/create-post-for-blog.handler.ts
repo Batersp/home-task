@@ -1,28 +1,33 @@
 import {Request, Response} from "express";
-import {Post} from "../../../posts/types/post";
 import {BlogCreatePostInputDto} from "../../dto/blogCreatePost.input-dto";
 import {postsService} from "../../../posts/aplication/posts.service";
 import {HttpStatus} from "../../../core/types/http-statuses";
 import {blogsService} from "../../aplication/blogs.service";
-import {mapToPostViewModel} from "../../../posts/routers/mappers/map-to-post-view-model.util";
+import {PostViewModel} from "../../../posts/types/post-view-model";
+import {postsQwRepository} from "../../../posts/repositories/postsQw.repository";
 
-export async function createPostForBlogHandler(req: Request<{id: string}, Post, BlogCreatePostInputDto>, res: Response) {
+export async function createPostForBlogHandler(req: Request<{
+    id: string
+}, {}, BlogCreatePostInputDto>, res: Response<PostViewModel>) {
     try {
-        console.log(req.params.id)
         const currentBlog = await blogsService.findById(req.params.id);
-        if(!currentBlog) {
+        if (!currentBlog) {
             res.sendStatus(HttpStatus.NotFound)
             return
         }
         const {title, shortDescription, content} = req.body;
-        const createdPost = await postsService.create({
+        const createdPostId = await postsService.create({
             blogId: req.params.id,
             content,
             title,
             shortDescription
         })
-        const postViewModel = mapToPostViewModel(createdPost)
-        res.status(HttpStatus.Created).send(postViewModel)
+        const createdPost = await postsQwRepository.findById(createdPostId.toString())
+        if (createdPost) {
+            res.status(HttpStatus.Created).send(createdPost)
+            return
+        }
+        res.sendStatus(HttpStatus.InternalServerError)
     } catch {
         res.sendStatus(HttpStatus.InternalServerError)
     }

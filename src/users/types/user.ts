@@ -1,4 +1,4 @@
-import {WithId} from "mongodb";
+import {UserViewModel} from "./user-view-model";
 
 export type User = {
     login: string;
@@ -12,5 +12,5 @@ export type UsersResponse = {
     page: number,
     pageSize: number,
     totalCount: number,
-    items: WithId<User>[]
+    items: UserViewModel[]
 }

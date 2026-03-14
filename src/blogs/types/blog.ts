@@ -1,4 +1,4 @@
-import {WithId} from "mongodb";
+import {BlogViewModel} from "./blog-view-model";
 
 export type Blog = {
     name: string,
@@ -13,5 +13,5 @@ export type BlogsResponse = {
     page: number,
     pageSize: number,
     totalCount: number,
-    items: WithId<Blog>[]
+    items: BlogViewModel[]
 }
