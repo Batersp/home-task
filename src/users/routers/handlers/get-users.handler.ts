@@ -3,9 +3,10 @@ import {matchedData} from "express-validator";
 import {UsersQuery} from "../../types/get-users-query";
 import {HttpStatus} from "../../../core/types/http-statuses";
 import {usersQwRepository} from "../../repositories/usersQw.repository";
-import {UsersResponse} from "../../types/user";
+import {PaginatedResponse} from "../../../core/types/paginatedResponse";
+import {UserViewModel} from "../../types/user-view-model";
 
-export async function getUsersHandler(req: Request, res: Response<UsersResponse>) {
+export async function getUsersHandler(req: Request, res: Response<PaginatedResponse<UserViewModel>>) {
     try {
         const sanitizedQuery = matchedData<UsersQuery>(req, {
             locations: ['query'],

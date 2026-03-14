@@ -1,8 +1,3 @@
-export type BlogViewModel = {
-    id: string;
-    name: string,
-    description: string,
-    websiteUrl: string,
-    createdAt?: string,
-    isMembership?: boolean,
-}
+import {Blog} from "./blog";
+
+export type BlogViewModel = Blog & {id: string}

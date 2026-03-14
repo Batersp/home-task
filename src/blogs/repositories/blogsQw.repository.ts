@@ -1,12 +1,12 @@
 import {BlogsQuery} from "../types/get-blogs-query";
-import {BlogsResponse} from "../types/blog";
 import {blogCollection} from "../../db/mongo.db";
 import {mapToBlogViewModel} from "../routers/mappers/map-to-blog-view-model.util";
 import {ObjectId} from "mongodb";
 import {BlogViewModel} from "../types/blog-view-model";
+import {PaginatedResponse} from "../../core/types/paginatedResponse";
 
 export const blogsQwRepository = {
-    async findMany(query: BlogsQuery): Promise<BlogsResponse> {
+    async findMany(query: BlogsQuery): Promise<PaginatedResponse<BlogViewModel>> {
 
         const {
             searchNameTerm,

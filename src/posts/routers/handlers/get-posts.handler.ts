@@ -2,10 +2,11 @@ import {Request, Response} from 'express'
 import {HttpStatus} from "../../../core/types/http-statuses";
 import {matchedData} from "express-validator";
 import {PostsQuery} from "../../types/get-posts-query";
-import {PostsResponse} from "../../types/post";
 import {postsQwRepository} from "../../repositories/postsQw.repository";
+import {PaginatedResponse} from "../../../core/types/paginatedResponse";
+import {PostViewModel} from "../../types/post-view-model";
 
-export async function getPostsHandler(req: Request, res: Response<PostsResponse>) {
+export async function getPostsHandler(req: Request, res: Response<PaginatedResponse<PostViewModel>>) {
     try {
         const sanitizedQuery = matchedData<PostsQuery>(req, {
             locations: ['query'],

@@ -10,8 +10,8 @@ export const postsRepository = {
     },
 
     async create(post: Post): Promise<ObjectId> {
-        const createResult = await postCollection.insertOne(post);
-        return createResult.insertedId;
+        const createdResult = await postCollection.insertOne(post);
+        return createdResult.insertedId;
     },
 
     async update(id: string, dto: PostInputDto): Promise<boolean> {
@@ -26,7 +26,7 @@ export const postsRepository = {
     },
 
     async delete(id: string):Promise<boolean> {
-        const deleteResult = await postCollection.deleteOne({_id: new ObjectId(id)});
-        return deleteResult.deletedCount >= 1;
+        const deletedResult = await postCollection.deleteOne({_id: new ObjectId(id)});
+        return deletedResult.deletedCount >= 1;
     }
 }

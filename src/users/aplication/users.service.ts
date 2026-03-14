@@ -1,6 +1,6 @@
 import {User} from "../types/user";
 import {usersRepository} from "../repositories/users.repository";
-import {ObjectId, WithId} from "mongodb";
+import {ObjectId} from "mongodb";
 import {UserInputDto} from "../dto/user.input-dto";
 import bcrypt from "bcrypt";
 

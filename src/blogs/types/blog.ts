@@ -1,4 +1,3 @@
-import {BlogViewModel} from "./blog-view-model";
 
 export type Blog = {
     name: string,
@@ -6,12 +5,4 @@ export type Blog = {
     websiteUrl: string
     createdAt?: string,
     isMembership?: boolean,
-}
-
-export type BlogsResponse = {
-    pagesCount: number,
-    page: number,
-    pageSize: number,
-    totalCount: number,
-    items: BlogViewModel[]
 }

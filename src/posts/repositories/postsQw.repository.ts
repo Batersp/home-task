@@ -1,12 +1,12 @@
 import {PostsQuery} from "../types/get-posts-query";
-import {PostsResponse} from "../types/post";
 import {postCollection} from "../../db/mongo.db";
 import {mapToPostViewModel} from "../routers/mappers/map-to-post-view-model.util";
 import {ObjectId} from "mongodb";
 import {PostViewModel} from "../types/post-view-model";
+import {PaginatedResponse} from "../../core/types/paginatedResponse";
 
 export const postsQwRepository = {
-    async findMany(query: PostsQuery, blogId?: string): Promise<PostsResponse> {
+    async findMany(query: PostsQuery, blogId?: string): Promise<PaginatedResponse<PostViewModel>> {
 
         const {
             pageNumber,
@@ -20,7 +20,6 @@ export const postsQwRepository = {
         if (blogId) {
             filter.blogId = blogId
         }
-        console.log(filter)
 
         const items = await postCollection
             .find(filter)

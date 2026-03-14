@@ -1,12 +1,12 @@
 import {UsersQuery} from "../types/get-users-query";
-import {UsersResponse} from "../types/user";
 import {userCollection} from "../../db/mongo.db";
 import {mapToUserViewModel} from "../routers/mappers/map-to-user-view-model.util";
 import {ObjectId} from "mongodb";
 import {UserViewModel} from "../types/user-view-model";
+import {PaginatedResponse} from "../../core/types/paginatedResponse";
 
 export const usersQwRepository = {
-    async findMany(query: UsersQuery): Promise<UsersResponse> {
+    async findMany(query: UsersQuery): Promise<PaginatedResponse<UserViewModel>> {
         const {
             pageNumber,
             sortBy,
