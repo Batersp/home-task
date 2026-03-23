@@ -3,10 +3,12 @@ import {usersRepository} from "../repositories/users.repository";
 import {ObjectId} from "mongodb";
 import {UserInputDto} from "../dto/user.input-dto";
 import {bcryptService} from "../../core/services/bcrypt.service";
+import {UserViewModel} from "../types/user-view-model";
+import {usersQwRepository} from "../repositories/usersQw.repository";
 
 export const usersService = {
 
-    async create(dto: UserInputDto): Promise<ObjectId | null> {
+    async create(dto: UserInputDto): Promise<UserViewModel | null> {
         const {login, password, email} = dto
         const existingUserByEmail = await usersRepository.findByEmail(email)
         const existingUserByLogin = await usersRepository.findByLogin(login)
@@ -21,7 +23,8 @@ export const usersService = {
             createdAt: new Date().toISOString(),
             passHash: hash,
         }
-        return usersRepository.create(user);
+        const createdUserId = await usersRepository.create(user);
+        return await usersQwRepository.findById(createdUserId)
     },
 
     async delete(id: ObjectId): Promise<boolean> {

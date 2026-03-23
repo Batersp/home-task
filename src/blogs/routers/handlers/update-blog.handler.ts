@@ -6,17 +6,12 @@ import {BlogInputDto} from "../../dto/blog.input-dto";
 export async function updateBlogHandler(req: Request<{ id: string }, {}, BlogInputDto>, res: Response) {
     const id = req.params.id;
     try {
-        const blog = await blogsService.findById(id);
-        if(!blog) {
-            res.sendStatus(HttpStatus.NotFound)
-            return
-        }
         const isUpdated = await blogsService.update(id, req.body)
         if(isUpdated) {
             res.sendStatus(HttpStatus.NoContent);
             return;
         }
-        res.sendStatus(HttpStatus.InternalServerError)
+        res.sendStatus(HttpStatus.NotFound)
     } catch {
         res.sendStatus(HttpStatus.InternalServerError)
     }

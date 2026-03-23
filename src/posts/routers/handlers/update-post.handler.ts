@@ -5,18 +5,12 @@ import {PostInputDto} from "../../dto/post.input-dto";
 
 export async function updatePostHandler(req: Request<{id: string}, {}, PostInputDto>, res: Response) {
     try {
-        const post = await postsService.findById(req.params.id)
-        if(!post) {
-            res.sendStatus(HttpStatus.NotFound)
-            return
-        }
-
         const isUpdated = await postsService.update(req.params.id, req.body)
         if (isUpdated) {
             res.sendStatus(HttpStatus.NoContent)
             return;
         }
-        res.sendStatus(HttpStatus.InternalServerError)
+        res.sendStatus(HttpStatus.NotFound)
     } catch {
         res.sendStatus(HttpStatus.InternalServerError)
     }

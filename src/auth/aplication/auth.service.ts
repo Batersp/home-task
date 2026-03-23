@@ -1,5 +1,4 @@
 import {LoginInputDto} from "../dto/login.input-dto";
-import {WithId} from "mongodb";
 import {User} from "../../users/types/user";
 import {RegistrationInputDTO} from "../dto/registration.input-dto";
 import {usersRepository} from "../../users/repositories/users.repository";
@@ -8,16 +7,25 @@ import {randomUUID} from "node:crypto";
 import {add} from "date-fns/add";
 import {emailManagers} from "../../core/managers/email.manager";
 import {Result, ResultStatus} from "../../core/types/result";
+import {jwtService} from "../../core/services/jwt.service";
 
 export const authService = {
-    async login(dto: LoginInputDto): Promise<WithId<User> | null> {
+    async login(dto: LoginInputDto): Promise<Result<null | string>> {
+        const errorResult: Result = {
+            status: ResultStatus.Unauthorized,
+            data: null,
+            extensions: []
+        }
         const {loginOrEmail, password} = dto
         const user = await usersRepository.findByLoginOrEmail(loginOrEmail);
-        if (!user) {
-            return null
-        }
+        if (!user) return errorResult;
         const isPasswordValid = bcryptService.compareSync(password, user.passHash)
-        return isPasswordValid ? user : null
+        const jwtToken = jwtService.createJwtToken(user._id.toString(), user.login, '1h')
+        return isPasswordValid ? {
+            status: ResultStatus.Success,
+            data: jwtToken,
+            extensions: []
+        } : errorResult
     },
 
     async registration(dto: RegistrationInputDTO): Promise<Result> {
