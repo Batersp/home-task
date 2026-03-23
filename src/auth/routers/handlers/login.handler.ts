@@ -3,7 +3,7 @@ import {HttpStatus} from "../../../core/types/http-statuses";
 import {authService} from "../../aplication/auth.service";
 import {LoginInputDto} from "../../dto/login.input-dto";
 import {AuthResponse} from "../../types/auth";
-import jwt from 'jsonwebtoken'
+import {jwtService} from "../../../core/services/jwt.service";
 
 export async function loginHandler(req: Request<{}, {}, LoginInputDto>, res: Response<AuthResponse>): Promise<void> {
     try {
@@ -13,10 +13,7 @@ export async function loginHandler(req: Request<{}, {}, LoginInputDto>, res: Res
             res.sendStatus(HttpStatus.Unauthorized)
             return;
         }
-        const jwtToken = jwt.sign(
-            {userId: user._id.toString(), userLogin: user.login},
-            process.env.SECRET as string,
-            {expiresIn: '1h'});
+        const jwtToken = jwtService.createJwtToken(user._id.toString(), user.login, '1h')
 
         res.status(HttpStatus.Ok).send({accessToken: jwtToken})
     } catch {

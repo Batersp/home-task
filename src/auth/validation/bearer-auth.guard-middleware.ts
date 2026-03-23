@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from "express";
 import {HttpStatus} from "../../core/types/http-statuses";
-import jwt from "jsonwebtoken";
+import {jwtService} from "../../core/services/jwt.service";
 
 export const bearerAuthGuardMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const auth = req.headers.authorization
@@ -16,7 +16,7 @@ export const bearerAuthGuardMiddleware = (req: Request, res: Response, next: Nex
     }
 
     try {
-        const decodedToken = jwt.verify(token, process.env.SECRET as string) as { userId: string, userLogin: string };
+        const decodedToken = jwtService.verify(token);
         req.user = { userId: decodedToken.userId, userLogin: decodedToken.userLogin }
         next()
     } catch {

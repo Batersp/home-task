@@ -18,7 +18,7 @@ const passwordValidation = body('password')
     .notEmpty()
     .withMessage('Password can not be empty')
 
-export const authInputDtoValidation = [
+export const authInputLoginDtoValidation = [
     loginOrEmailValidation,
     passwordValidation
 ]

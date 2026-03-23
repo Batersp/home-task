@@ -2,8 +2,9 @@ import {FieldValidationError, ValidationError, validationResult} from "express-v
 import {NextFunction} from "express";
 import {HttpStatus} from "../../types/http-statuses";
 import { Request, Response } from 'express';
+import {ExtensionType} from "../../types/result";
 
-const formatErrors = (error: ValidationError) => {
+const formatErrors = (error: ValidationError): ExtensionType => {
     const {path, msg} = error as unknown as FieldValidationError;
     return {
         field: path,
