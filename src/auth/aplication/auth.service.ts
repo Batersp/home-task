@@ -10,7 +10,7 @@ import {Result, ResultStatus} from "../../core/types/result";
 import {jwtService} from "../../core/services/jwt.service";
 
 export const authService = {
-    async login(dto: LoginInputDto): Promise<Result<null | string>> {
+    async login(dto: LoginInputDto): Promise<Result<null | {accessToken: string, refreshToken: string}>> {
         const errorResult: Result = {
             status: ResultStatus.Unauthorized,
             data: null,
@@ -20,10 +20,14 @@ export const authService = {
         const user = await usersRepository.findByLoginOrEmail(loginOrEmail);
         if (!user) return errorResult;
         const isPasswordValid = bcryptService.compareSync(password, user.passHash)
-        const jwtToken = jwtService.createJwtToken(user._id.toString(), user.login, '1h')
+        if (!isPasswordValid) return errorResult
+
+
+        const accessToken = jwtService.createAccessToken(user._id.toString(), user.login, '10s')
+        const refreshToken = jwtService.createRefreshToken(user._id.toString(), user.login)
         return isPasswordValid ? {
             status: ResultStatus.Success,
-            data: jwtToken,
+            data: {accessToken, refreshToken},
             extensions: []
         } : errorResult
     },
@@ -105,5 +109,47 @@ export const authService = {
         await usersRepository.updateConfirmationCode(user._id, newCode, newExpiration)
         await emailManagers.sendConfirmationCode(email, newCode)
         return true
+    },
+
+    async updateTokens(userId: string, userLogin: string, oldRefreshToken: string): Promise<Result<null | {accessToken: string, refreshToken: string}>> {
+        const isBlacklisted = await usersRepository.isTokenBlacklisted(oldRefreshToken)
+        if (isBlacklisted) {
+            return {
+                status: ResultStatus.Unauthorized,
+                extensions: [{
+                    message: 'Invalid Refresh Token',
+                    field: 'cookie'
+                }],
+                data: null
+            }
+        }
+
+        const accessToken = jwtService.createAccessToken(userId, userLogin, '10s')
+        const refreshToken = jwtService.createRefreshToken(userId, userLogin)
+
+        await usersRepository.addTokenToBlackList(userId, oldRefreshToken)
+        return {
+            status: ResultStatus.Success,
+            extensions: [],
+            data: {accessToken, refreshToken}
+        }
+    },
+
+    async addTokenToBlackList(userId: string, token: string): Promise<Result> {
+        const isBlacklisted = await usersRepository.isTokenBlacklisted(token)
+        if(isBlacklisted) {
+            return {
+                status: ResultStatus.Unauthorized,
+                extensions: [],
+                data: null
+            }
+        }
+
+        await usersRepository.addTokenToBlackList(userId, token)
+        return {
+            status: ResultStatus.NoContent,
+            extensions: [],
+            data: null
+        }
     }
 }

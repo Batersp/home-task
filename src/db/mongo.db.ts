@@ -4,17 +4,20 @@ import {Post} from "../posts/types/post";
 import {SETTINGS} from "../core/settings/settings";
 import {User} from "../users/types/user";
 import {Comment} from "../сomments/types/comment";
+import {TokenBlackList} from "../auth/types/auth";
 
 const BLOG_COLLECTION_NAME = 'blogs';
 const POST_COLLECTION_NAME = 'posts';
 const COMMENTS_COLLECTION_NAME = 'comments';
 const USERS_COLLECTION_NAME = 'users';
+const TOKEN_BLACK_LIST_COLLECTION_NAME = 'tokenBlackList';
 
 export let client: MongoClient;
 export let blogCollection: Collection<Blog>;
 export let postCollection: Collection<Post>;
 export let commentCollection: Collection<Comment>;
 export let userCollection: Collection<User>;
+export let tokenBlackListCollection: Collection<TokenBlackList>;
 
 export async function runDB(): Promise<void> {
     const url = SETTINGS.MONGO_URL
@@ -28,6 +31,7 @@ export async function runDB(): Promise<void> {
     postCollection = db.collection<Post>(POST_COLLECTION_NAME);
     commentCollection = db.collection<Comment>(COMMENTS_COLLECTION_NAME);
     userCollection = db.collection<User>(USERS_COLLECTION_NAME);
+    tokenBlackListCollection = db.collection<TokenBlackList>(TOKEN_BLACK_LIST_COLLECTION_NAME);
 
     try {
         await client.connect();

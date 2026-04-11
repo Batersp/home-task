@@ -16,7 +16,7 @@ export const bearerAuthGuardMiddleware = (req: Request, res: Response, next: Nex
     }
 
     try {
-        const decodedToken = jwtService.verify(token);
+        const decodedToken = jwtService.verifyAccessToken(token);
         req.user = { userId: decodedToken.userId, userLogin: decodedToken.userLogin }
         next()
     } catch {

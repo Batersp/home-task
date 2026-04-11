@@ -9,11 +9,11 @@ export async function meHandler(req: Request, res: Response<MeResponse>) {
         const user = await usersQwRepository.findById(new ObjectId(req.user!.userId))
         if (user) {
             const {id: userId, login, email} = user
-           res.status(HttpStatus.Ok).send({
-               userId,
-               login,
-               email
-           })
+            res.status(HttpStatus.Ok).send({
+                userId,
+                login,
+                email
+            })
         }
     } catch {
         res.sendStatus(HttpStatus.InternalServerError)
