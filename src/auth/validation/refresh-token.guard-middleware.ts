@@ -12,7 +12,7 @@ export const refreshTokenGuardMiddleware = (req: Request, res: Response, next: N
 
     try {
         const decoded = jwtService.verifyRefreshToken(refreshToken)
-        req.user = { userId: decoded.userId, userLogin: decoded.userLogin }
+        req.user = { userId: decoded.userId, userLogin: decoded.userLogin, deviceId: decoded.deviceId }
         next()
     } catch {
         res.sendStatus(HttpStatus.Unauthorized)

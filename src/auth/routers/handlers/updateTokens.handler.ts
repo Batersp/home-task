@@ -8,7 +8,7 @@ export async function updateTokensHandler(req: Request, res: Response<AuthRespon
     try {
         const { userId, userLogin } = req.user!
         const refreshToken= req.cookies.refreshToken
-        const result = await authService.updateTokens(userId, userLogin, refreshToken)
+        const result = await authService.updateTokens(userId, userLogin, refreshToken, req.ip!)
 
         if (result.status !== ResultStatus.Success) {
             res.sendStatus(resultStatusToHttpStatus[result.status])

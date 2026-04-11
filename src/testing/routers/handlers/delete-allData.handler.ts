@@ -3,12 +3,11 @@ import {HttpStatus} from "../../../core/types/http-statuses";
 import {
     blogCollection,
     commentCollection,
-    postCollection,
-    tokenBlackListCollection,
+    postCollection, securityCollection,
     userCollection
 } from "../../../db/mongo.db";
 
 export async function deleteAllData(req: Request, res: Response) {
-    await Promise.all([blogCollection.deleteMany(), postCollection.deleteMany(), userCollection.deleteMany(), commentCollection.deleteMany(), tokenBlackListCollection.deleteMany()])
+    await Promise.all([blogCollection.deleteMany(), postCollection.deleteMany(), userCollection.deleteMany(), commentCollection.deleteMany(), securityCollection.deleteMany()])
     res.sendStatus(HttpStatus.NoContent)
 }

@@ -1,22 +1,29 @@
 import jwt, {SignOptions} from "jsonwebtoken";
+import {AccessTokenInfoType, RefreshTokenInfoType} from "../types/tokens";
 
 export const jwtService = {
-    createAccessToken(userId: string, userLogin: string, expiresIn: SignOptions['expiresIn']): string {
+    createAccessToken(data: AccessTokenInfoType & {expiresIn: SignOptions['expiresIn']}): string {
+        const {userId, userLogin, expiresIn} = data
         return jwt.sign(
             {userId, userLogin},
             process.env.ACCESS_TOKEN_SECRET as string,
             {expiresIn});
     },
 
-    createRefreshToken(userId: string, userLogin: string): string {
-        return jwt.sign({ userId, userLogin }, process.env.REFRESH_TOKEN_SECRET as string, { expiresIn: '20s' })
+    createRefreshToken(data: RefreshTokenInfoType): string {
+        const {userId, userLogin, deviceId} = data
+        return jwt.sign({ userId, userLogin, deviceId }, process.env.REFRESH_TOKEN_SECRET as string, { expiresIn: '20s' })
     },
 
-    verifyAccessToken(token: string): { userId: string, userLogin: string } {
-        return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as { userId: string, userLogin: string }
+    verifyAccessToken(token: string): AccessTokenInfoType {
+        return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as AccessTokenInfoType
     },
 
-    verifyRefreshToken(token: string): { userId: string, userLogin: string } {
-        return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string) as { userId: string, userLogin: string }
+    verifyRefreshToken(token: string): RefreshTokenInfoType {
+        return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string) as RefreshTokenInfoType
     },
+
+    getRefreshTokenInfo(token: string): RefreshTokenInfoType & {iat: number, exp: number} {
+        return jwt.decode(token) as RefreshTokenInfoType & {iat: number, exp: number}
+    }
 }

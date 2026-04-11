@@ -1,5 +1,5 @@
 import {User} from "../types/user";
-import {tokenBlackListCollection, userCollection} from "../../db/mongo.db";
+import {userCollection} from "../../db/mongo.db";
 import {ObjectId, WithId} from "mongodb";
 
 export const usersRepository = {
@@ -48,18 +48,5 @@ export const usersRepository = {
     async delete(id: ObjectId): Promise<boolean> {
         const deletedResult = await userCollection.deleteOne({_id: id})
         return deletedResult.deletedCount >= 1;
-    },
-
-    async addTokenToBlackList(userId: string, token: string): Promise<boolean> {
-        const res = await tokenBlackListCollection.insertOne({
-            userId,
-            token
-        })
-        return !!res.insertedId
-    },
-
-    async isTokenBlacklisted(token: string): Promise<boolean> {
-        const found = await tokenBlackListCollection.findOne({ token })
-        return !!found
     },
 }

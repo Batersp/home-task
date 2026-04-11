@@ -7,6 +7,7 @@ dotenv.config()
 
 const bootstrap = async () => {
     const app = express()
+    //app.set('trust proxy', true)
     setupApp(app);
     const PORT = SETTINGS.PORT;
     await runDB()

@@ -8,8 +8,3 @@ export type MeResponse = {
     userId: string
 }
 
-export type TokenBlackList = {
-    token: string,
-    userId: string
-}
-

@@ -8,9 +8,14 @@ import {add} from "date-fns/add";
 import {emailManagers} from "../../core/managers/email.manager";
 import {Result, ResultStatus} from "../../core/types/result";
 import {jwtService} from "../../core/services/jwt.service";
+import {securityRepository} from "../../security/repositories/security.repository";
+import {Utils} from "../../core/utils/utils";
 
 export const authService = {
-    async login(dto: LoginInputDto): Promise<Result<null | {accessToken: string, refreshToken: string}>> {
+    async login(dto: LoginInputDto, ip: string, deviceName: string = 'commonName'): Promise<Result<null | {
+        accessToken: string,
+        refreshToken: string
+    }>> {
         const errorResult: Result = {
             status: ResultStatus.Unauthorized,
             data: null,
@@ -22,14 +27,35 @@ export const authService = {
         const isPasswordValid = bcryptService.compareSync(password, user.passHash)
         if (!isPasswordValid) return errorResult
 
+        const deviceId = crypto.randomUUID()
+        const accessToken = jwtService.createAccessToken({
+            userId: user._id.toString(),
+            userLogin: user.login,
+            expiresIn: '10s'
+        })
+        const refreshToken = jwtService.createRefreshToken({
+            userId: user._id.toString(),
+            userLogin: user.login,
+            deviceId
+        })
 
-        const accessToken = jwtService.createAccessToken(user._id.toString(), user.login, '10s')
-        const refreshToken = jwtService.createRefreshToken(user._id.toString(), user.login)
-        return isPasswordValid ? {
+        const decodedRefreshToken = jwtService.getRefreshTokenInfo(refreshToken)
+
+        await securityRepository.createSession({
+            userId: user._id.toString(),
+            deviceId,
+            iat: Utils.convertJwtDateToISO(decodedRefreshToken.iat),
+            deviceName,
+            ip,
+            exp: Utils.convertJwtDateToISO(decodedRefreshToken.exp)
+
+        })
+
+        return {
             status: ResultStatus.Success,
             data: {accessToken, refreshToken},
             extensions: []
-        } : errorResult
+        }
     },
 
     async registration(dto: RegistrationInputDTO): Promise<Result> {
@@ -91,7 +117,7 @@ export const authService = {
         if (user.emailConfirmation.isConfirmed) return resultError
 
         const isUpdated = await usersRepository.updateConfirmation(user._id)
-        if(!isUpdated) return resultError
+        if (!isUpdated) return resultError
         return {
             status: ResultStatus.NoContent,
             extensions: [],
@@ -101,33 +127,51 @@ export const authService = {
 
     async resendConfirmationEmail(email: string): Promise<boolean> {
         const user = await usersRepository.findByEmail(email)
-        if(!user) return false
+        if (!user) return false
         if (user.emailConfirmation?.isConfirmed) return false
 
         const newCode = randomUUID()
-        const newExpiration = add(new Date(), { hours: 1, minutes: 30 }).toISOString()
+        const newExpiration = add(new Date(), {hours: 1, minutes: 30}).toISOString()
         await usersRepository.updateConfirmationCode(user._id, newCode, newExpiration)
         await emailManagers.sendConfirmationCode(email, newCode)
         return true
     },
 
-    async updateTokens(userId: string, userLogin: string, oldRefreshToken: string): Promise<Result<null | {accessToken: string, refreshToken: string}>> {
-        const isBlacklisted = await usersRepository.isTokenBlacklisted(oldRefreshToken)
-        if (isBlacklisted) {
+    async updateTokens(userId: string, userLogin: string, oldRefreshToken: string, ip: string): Promise<Result<null | {
+        accessToken: string,
+        refreshToken: string
+    }>> {
+        const {deviceId, iat} = jwtService.getRefreshTokenInfo(oldRefreshToken)
+        const oldIat = Utils.convertJwtDateToISO(iat)
+        const session = await securityRepository.findSession(deviceId, oldIat)
+
+        if (!session) {
             return {
                 status: ResultStatus.Unauthorized,
                 extensions: [{
-                    message: 'Invalid Refresh Token',
+                    message: 'Invalid Session Data',
                     field: 'cookie'
                 }],
                 data: null
             }
         }
 
-        const accessToken = jwtService.createAccessToken(userId, userLogin, '10s')
-        const refreshToken = jwtService.createRefreshToken(userId, userLogin)
+        const accessToken = jwtService.createAccessToken({
+            userId, userLogin, expiresIn: '10s'
+        })
+        const refreshToken = jwtService.createRefreshToken({
+            userId, userLogin, deviceId
+        })
 
-        await usersRepository.addTokenToBlackList(userId, oldRefreshToken)
+        const decodedNewRefreshToken = jwtService.getRefreshTokenInfo(refreshToken)
+        await securityRepository.updateSession(
+            deviceId, oldIat,
+            {
+                iat: Utils.convertJwtDateToISO(decodedNewRefreshToken.iat),
+                exp: Utils.convertJwtDateToISO(decodedNewRefreshToken.exp),
+                ip
+            })
+
         return {
             status: ResultStatus.Success,
             extensions: [],
@@ -135,21 +179,19 @@ export const authService = {
         }
     },
 
-    async addTokenToBlackList(userId: string, token: string): Promise<Result> {
-        const isBlacklisted = await usersRepository.isTokenBlacklisted(token)
-        if(isBlacklisted) {
-            return {
-                status: ResultStatus.Unauthorized,
-                extensions: [],
-                data: null
-            }
-        }
-
-        await usersRepository.addTokenToBlackList(userId, token)
-        return {
-            status: ResultStatus.NoContent,
+    async logout(refreshToken: string): Promise<Result> {
+        const { deviceId, iat } = jwtService.getRefreshTokenInfo(refreshToken)
+        const result: Result = {
+            status: ResultStatus.Unauthorized,
             extensions: [],
             data: null
         }
+
+        const session = await securityRepository.findSession(deviceId, Utils.convertJwtDateToISO(iat))
+        if (!session) return result
+
+        await securityRepository.deleteSession(deviceId)
+        result.status = ResultStatus.NoContent
+        return result
     }
 }
