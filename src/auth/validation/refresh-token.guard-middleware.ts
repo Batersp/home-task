@@ -1,8 +1,10 @@
 import {Request, Response, NextFunction} from "express";
 import {HttpStatus} from "../../core/types/http-statuses";
 import {jwtService} from "../../core/services/jwt.service";
+import {securityService} from "../../security/application/security.service";
+import {Utils} from "../../core/utils/utils";
 
-export const refreshTokenGuardMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const refreshTokenGuardMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const refreshToken = req.cookies.refreshToken
 
     if (!refreshToken) {
@@ -12,7 +14,15 @@ export const refreshTokenGuardMiddleware = (req: Request, res: Response, next: N
 
     try {
         const decoded = jwtService.verifyRefreshToken(refreshToken)
-        req.user = { userId: decoded.userId, userLogin: decoded.userLogin, deviceId: decoded.deviceId }
+        const tokenInfo = jwtService.getRefreshTokenInfo(refreshToken)
+        const session = await securityService.findCurrentSession(tokenInfo.deviceId, Utils.convertJwtDateToISO(tokenInfo.iat))
+
+        if (!session) {
+            res.sendStatus(HttpStatus.Unauthorized)
+            return
+        }
+
+        req.user = {userId: decoded.userId, userLogin: decoded.userLogin, deviceId: decoded.deviceId}
         next()
     } catch {
         res.sendStatus(HttpStatus.Unauthorized)

@@ -7,7 +7,7 @@ export const securityRepository = {
         return !!result.insertedId
     },
 
-    async findSession(deviceId: string, iat: string): Promise<Security | null> {
+    async findCurrentSession(deviceId: string, iat: string): Promise<Security | null> {
         return securityCollection.findOne({ deviceId, iat })
     },
 

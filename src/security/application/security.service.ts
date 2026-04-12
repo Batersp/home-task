@@ -1,5 +1,6 @@
 import {securityRepository} from "../repositories/security.repository";
 import {Result, ResultStatus} from "../../core/types/result";
+import {Security, UpdateSessionDataType} from "../types/security";
 
 export const securityService = {
     async deleteAllSessionsExcludeCurrent(userId: string, deviceId: string): Promise<void> {
@@ -24,5 +25,17 @@ export const securityService = {
         await securityRepository.deleteSession(deviceId)
         result.status = ResultStatus.NoContent;
         return result
+    },
+
+    async createSession(sessionData: Security) {
+        await securityRepository.createSession(sessionData)
+    },
+
+    async findCurrentSession(deviceId: string, iat: string): Promise<Security | null> {
+        return securityRepository.findCurrentSession(deviceId, iat)
+    },
+
+    async updateSession(deviceId: string, oldIat: string, data: UpdateSessionDataType) {
+        await securityRepository.updateSession(deviceId, oldIat, data)
     }
 }

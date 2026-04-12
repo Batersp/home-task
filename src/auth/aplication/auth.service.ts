@@ -8,8 +8,8 @@ import {add} from "date-fns/add";
 import {emailManagers} from "../../core/managers/email.manager";
 import {Result, ResultStatus} from "../../core/types/result";
 import {jwtService} from "../../core/services/jwt.service";
-import {securityRepository} from "../../security/repositories/security.repository";
 import {Utils} from "../../core/utils/utils";
+import {securityService} from "../../security/application/security.service";
 
 export const authService = {
     async login(dto: LoginInputDto, ip: string, deviceName: string = 'commonName'): Promise<Result<null | {
@@ -41,14 +41,13 @@ export const authService = {
 
         const decodedRefreshToken = jwtService.getRefreshTokenInfo(refreshToken)
 
-        await securityRepository.createSession({
+        await securityService.createSession({
             userId: user._id.toString(),
             deviceId,
             iat: Utils.convertJwtDateToISO(decodedRefreshToken.iat),
             deviceName,
             ip,
             exp: Utils.convertJwtDateToISO(decodedRefreshToken.exp)
-
         })
 
         return {
@@ -143,18 +142,6 @@ export const authService = {
     }>> {
         const {deviceId, iat} = jwtService.getRefreshTokenInfo(oldRefreshToken)
         const oldIat = Utils.convertJwtDateToISO(iat)
-        const session = await securityRepository.findSession(deviceId, oldIat)
-
-        if (!session) {
-            return {
-                status: ResultStatus.Unauthorized,
-                extensions: [{
-                    message: 'Invalid Session Data',
-                    field: 'cookie'
-                }],
-                data: null
-            }
-        }
 
         const accessToken = jwtService.createAccessToken({
             userId, userLogin, expiresIn: '10s'
@@ -164,7 +151,7 @@ export const authService = {
         })
 
         const decodedNewRefreshToken = jwtService.getRefreshTokenInfo(refreshToken)
-        await securityRepository.updateSession(
+        await securityService.updateSession(
             deviceId, oldIat,
             {
                 iat: Utils.convertJwtDateToISO(decodedNewRefreshToken.iat),
@@ -179,19 +166,12 @@ export const authService = {
         }
     },
 
-    async logout(refreshToken: string): Promise<Result> {
-        const { deviceId, iat } = jwtService.getRefreshTokenInfo(refreshToken)
-        const result: Result = {
-            status: ResultStatus.Unauthorized,
+    async logout(userId: string, deviceId: string): Promise<Result> {
+        await securityService.deleteSession(userId, deviceId)
+        return {
+            status: ResultStatus.NoContent,
             extensions: [],
             data: null
         }
-
-        const session = await securityRepository.findSession(deviceId, Utils.convertJwtDateToISO(iat))
-        if (!session) return result
-
-        await securityRepository.deleteSession(deviceId)
-        result.status = ResultStatus.NoContent
-        return result
     }
 }

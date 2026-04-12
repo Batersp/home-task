@@ -5,8 +5,7 @@ import {resultStatusToHttpStatus} from "../../../core/types/result";
 
 export async function logoutHandler(req: Request, res: Response) {
     try {
-        const refreshToken= req.cookies.refreshToken
-        const result = await authService.logout(refreshToken)
+        const result = await authService.logout(req.user!.userId, req.user!.deviceId!)
         res.clearCookie('refreshToken')
         res.sendStatus(resultStatusToHttpStatus[result.status])
     } catch {
