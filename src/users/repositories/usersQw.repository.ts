@@ -4,8 +4,10 @@ import {mapToUserViewModel} from "../routers/mappers/map-to-user-view-model.util
 import {ObjectId} from "mongodb";
 import {UserViewModel} from "../types/user-view-model";
 import {PaginatedResponse} from "../../core/types/paginatedResponse";
+import {injectable} from "inversify";
 
-export const usersQwRepository = {
+@injectable()
+export class UsersQwRepository {
     async findMany(query: UsersQuery): Promise<PaginatedResponse<UserViewModel>> {
         const {
             pageNumber,
@@ -42,11 +44,11 @@ export const usersQwRepository = {
         const totalCount = await userCollection.countDocuments(filter);
 
         return {items: items.map(mapToUserViewModel), totalCount, pageSize, page: pageNumber, pagesCount: Math.ceil(totalCount / pageSize)};
-    },
+    }
 
     async findById(id: ObjectId): Promise<UserViewModel | null> {
         const user = await userCollection.findOne({_id: id})
         if(!user) return null;
         return mapToUserViewModel(user)
-    },
+    }
 }

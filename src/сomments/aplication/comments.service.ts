@@ -1,19 +1,28 @@
 import {CommentInputDto} from "../dto/comment.input-dto";
-import {commentsRepository} from "../repositories/comments.repository";
+import {CommentsRepository} from "../repositories/comments.repository";
 import {WithId} from "mongodb";
 import {Comment, CommentatorInfo} from "../types/comment";
-import {postsService} from "../../posts/aplication/posts.service";
+import {PostsService} from "../../posts/aplication/posts.service";
 import {CommentViewModel} from "../types/comment-view-model";
-import {commentsQwRepository} from "../repositories/commentsQw.repository";
+import {CommentsQwRepository} from "../repositories/commentsQw.repository";
 import {Result, ResultStatus} from "../../core/types/result";
+import {inject, injectable} from "inversify";
 
-export const commentsService = {
+@injectable()
+export class CommentsService {
+
+    constructor(
+        @inject(CommentsRepository) private commentsRepository: CommentsRepository,
+        @inject(PostsService) private postsService: PostsService,
+        @inject(CommentsQwRepository) private commentsQwRepository: CommentsQwRepository
+    ) {}
+
     async findById(id: string): Promise<WithId<Comment> | null> {
-        return commentsRepository.findById(id)
-    },
+        return this.commentsRepository.findById(id)
+    }
 
     async create(postId: string, commentatorInfo: CommentatorInfo, dto:  CommentInputDto): Promise<CommentViewModel | null> {
-        const post = await postsService.findById(postId);
+        const post = await this.postsService.findById(postId);
         if (!post) return null;
 
         const {content} = dto
@@ -23,12 +32,12 @@ export const commentsService = {
             commentatorInfo,
             createdAt: new Date().toISOString()
         }
-        const createdCommentId = await commentsRepository.create(comment)
-        return await commentsQwRepository.findById(createdCommentId.toString())
-    },
+        const createdCommentId = await this.commentsRepository.create(comment)
+        return await this.commentsQwRepository.findById(createdCommentId.toString())
+    }
 
     async update(commentId: string, dto: CommentInputDto, currentUserId: string): Promise<Result> {
-        const comment = await commentsService.findById(commentId)
+        const comment = await this.findById(commentId)
         if(!comment) return {
             status: ResultStatus.NotFound,
             extensions: [],
@@ -41,7 +50,7 @@ export const commentsService = {
             data: null
         }
 
-        const isUpdated = await commentsRepository.update(commentId, dto)
+        const isUpdated = await this.commentsRepository.update(commentId, dto)
         if(isUpdated) return {
             status: ResultStatus.NoContent,
             extensions: [],
@@ -53,10 +62,10 @@ export const commentsService = {
             extensions: [],
             data: null
         }
-    },
+    }
 
     async delete(commentId: string, currentUserId: string): Promise<Result> {
-        const comment = await commentsService.findById(commentId);
+        const comment = await this.findById(commentId);
         if(!comment) return {
             status: ResultStatus.NotFound,
             extensions: [],
@@ -69,7 +78,7 @@ export const commentsService = {
             data: null
         }
 
-        const isDeleted = await commentsRepository.delete(commentId)
+        const isDeleted = await this.commentsRepository.delete(commentId)
         if(isDeleted) return {
             status: ResultStatus.NoContent,
             extensions: [],

@@ -1,7 +1,6 @@
 import {LoginInputDto} from "../dto/login.input-dto";
 import {User} from "../../users/types/user";
 import {RegistrationInputDTO} from "../dto/registration.input-dto";
-import {usersRepository} from "../../users/repositories/users.repository";
 import {bcryptService} from "../../core/services/bcrypt.service";
 import {randomUUID} from "node:crypto";
 import {add} from "date-fns/add";
@@ -9,9 +8,15 @@ import {emailManagers} from "../../core/managers/email.manager";
 import {Result, ResultStatus} from "../../core/types/result";
 import {jwtService} from "../../core/services/jwt.service";
 import {Utils} from "../../core/utils/utils";
-import {securityService} from "../../security/application/security.service";
+import {SecurityService} from "../../security/application/security.service";
+import {inject, injectable} from "inversify";
+import {UsersRepository} from "../../users/repositories/users.repository";
 
-export const authService = {
+@injectable()
+export class AuthService {
+
+    constructor(@inject(UsersRepository) private userRepository: UsersRepository, @inject(SecurityService) private securityService: SecurityService) {}
+
     async login(dto: LoginInputDto, ip: string, deviceName: string = 'commonName'): Promise<Result<null | {
         accessToken: string,
         refreshToken: string
@@ -22,7 +27,7 @@ export const authService = {
             extensions: []
         }
         const {loginOrEmail, password} = dto
-        const user = await usersRepository.findByLoginOrEmail(loginOrEmail);
+        const user = await this.userRepository.findByLoginOrEmail(loginOrEmail);
         if (!user) return errorResult;
         const isPasswordValid = bcryptService.compareSync(password, user.passHash)
         if (!isPasswordValid) return errorResult
@@ -41,7 +46,7 @@ export const authService = {
 
         const decodedRefreshToken = jwtService.getRefreshTokenInfo(refreshToken)
 
-        await securityService.createSession({
+        await this.securityService.createSession({
             userId: user._id.toString(),
             deviceId,
             iat: Utils.convertJwtDateToISO(decodedRefreshToken.iat),
@@ -55,12 +60,12 @@ export const authService = {
             data: {accessToken, refreshToken},
             extensions: []
         }
-    },
+    }
 
     async registration(dto: RegistrationInputDTO): Promise<Result> {
         const {login, password, email} = dto
-        const existingUserByEmail = await usersRepository.findByEmail(email)
-        const existingUserByLogin = await usersRepository.findByLogin(login)
+        const existingUserByEmail = await this.userRepository.findByEmail(email)
+        const existingUserByLogin = await this.userRepository.findByLogin(login)
 
         if (existingUserByEmail) return {
             status: ResultStatus.BadRequest,
@@ -90,7 +95,7 @@ export const authService = {
             }
         };
 
-        await usersRepository.create(newUser);
+        await this.userRepository.create(newUser);
 
         await emailManagers.sendConfirmationCode(newUser.email, newUser.emailConfirmation!.confirmationCode)
         return {
@@ -98,10 +103,10 @@ export const authService = {
             data: null,
             extensions: []
         }
-    },
+    }
 
     async confirmCode(code: string): Promise<Result> {
-        const user = await usersRepository.findByConfirmationCode(code);
+        const user = await this.userRepository.findByConfirmationCode(code);
         const resultError: Result = {
             status: ResultStatus.BadRequest,
             extensions: [{
@@ -115,26 +120,26 @@ export const authService = {
         if (user.emailConfirmation.expirationDate < new Date()) return resultError
         if (user.emailConfirmation.isConfirmed) return resultError
 
-        const isUpdated = await usersRepository.updateConfirmation(user._id)
+        const isUpdated = await this.userRepository.updateConfirmation(user._id)
         if (!isUpdated) return resultError
         return {
             status: ResultStatus.NoContent,
             extensions: [],
             data: null
         }
-    },
+    }
 
     async resendConfirmationEmail(email: string): Promise<boolean> {
-        const user = await usersRepository.findByEmail(email)
+        const user = await this.userRepository.findByEmail(email)
         if (!user) return false
         if (user.emailConfirmation?.isConfirmed) return false
 
         const newCode = randomUUID()
         const newExpiration = add(new Date(), {hours: 1, minutes: 30}).toISOString()
-        await usersRepository.updateConfirmationCode(user._id, newCode, newExpiration)
+        await this.userRepository.updateConfirmationCode(user._id, newCode, newExpiration)
         await emailManagers.sendConfirmationCode(email, newCode)
         return true
-    },
+    }
 
     async updateTokens(userId: string, userLogin: string, oldRefreshToken: string, ip: string): Promise<Result<null | {
         accessToken: string,
@@ -151,7 +156,7 @@ export const authService = {
         })
 
         const decodedNewRefreshToken = jwtService.getRefreshTokenInfo(refreshToken)
-        await securityService.updateSession(
+        await this.securityService.updateSession(
             deviceId, oldIat,
             {
                 iat: Utils.convertJwtDateToISO(decodedNewRefreshToken.iat),
@@ -164,14 +169,43 @@ export const authService = {
             extensions: [],
             data: {accessToken, refreshToken}
         }
-    },
+    }
 
     async logout(userId: string, deviceId: string): Promise<Result> {
-        await securityService.deleteSession(userId, deviceId)
+        await this.securityService.deleteSession(userId, deviceId)
         return {
             status: ResultStatus.NoContent,
             extensions: [],
             data: null
         }
+    }
+
+    async passwordRecovery(email: string) {
+        const user = await this.userRepository.findByEmail(email)
+        if (!user) return
+
+        const code = randomUUID()
+        const expirationDate = add(new Date(), {hours: 1})
+
+        await this.userRepository.savePasswordRecoveryCode(user._id, code, expirationDate)
+        await emailManagers.sendPasswordRecovery(email, code)
+    }
+
+    async confirmPasswordRecovery(code: string, newPassword: string): Promise<Result> {
+        const errorResult: Result = {
+            status: ResultStatus.BadRequest,
+            extensions: [{message: 'Invalid or expired recovery code', field: 'recoveryCode'}],
+            data: null
+        }
+
+        const user = await this.userRepository.findByRecoveryCode(code)
+        if (!user) return errorResult
+        if (!user.passwordRecovery) return errorResult
+        if (user.passwordRecovery.expirationDate < new Date()) return errorResult
+
+        const passHash = bcryptService.createHash(newPassword)
+        await this.userRepository.updatePassword(user._id, passHash)
+
+        return {status: ResultStatus.NoContent, extensions: [], data: null}
     }
 }

@@ -1,21 +1,29 @@
 import {WithId} from "mongodb";
 import {Post} from "../types/post";
-import {postsRepository} from "../repositories/posts.repository";
+import {PostsRepository} from "../repositories/posts.repository";
 import {PostInputDto} from "../dto/post.input-dto";
-import {blogsService} from "../../blogs/aplication/blogs.service";
+import {BlogsService} from "../../blogs/aplication/blogs.service";
 import {PostViewModel} from "../types/post-view-model";
-import {postsQwRepository} from "../repositories/postsQw.repository";
+import {inject, injectable} from "inversify";
+import {PostsQwRepository} from "../repositories/postsQw.repository";
 
-export const postsService = {
+@injectable()
+export class PostsService {
+
+    constructor(
+        @inject(BlogsService) private blogsService: BlogsService,
+        @inject(PostsQwRepository) private postsQwRepository: PostsQwRepository,
+        @inject(PostsRepository) private postsRepository: PostsRepository,
+    ) {}
 
     async findById(id: string): Promise<WithId<Post> | null> {
-        return postsRepository.findById(id);
-    },
+        return this.postsRepository.findById(id);
+    }
 
     async create(dto: PostInputDto): Promise<PostViewModel | null> {
         const {title, shortDescription, content, blogId} = dto;
 
-        const currentBlog = await blogsService.findById(blogId);
+        const currentBlog = await this.blogsService.findById(blogId);
         if (!currentBlog) return null
 
         const post: Post = {
@@ -26,20 +34,20 @@ export const postsService = {
             blogName: '1',
             createdAt: new Date().toISOString()
         }
-        const createdPostId = await postsRepository.create(post)
-        return await postsQwRepository.findById(createdPostId.toString())
-    },
+        const createdPostId = await this.postsRepository.create(post)
+        return await this.postsQwRepository.findById(createdPostId.toString())
+    }
 
     async update(id: string, dto: PostInputDto): Promise<boolean> {
-        const post = await postsService.findById(id)
+        const post = await this.findById(id)
         if(!post) return false
 
-        return await postsRepository.update(id, dto)
-    },
+        return await this.postsRepository.update(id, dto)
+    }
 
     async delete(id: string): Promise<boolean> {
-        const post = await postsService.findById(id);
+        const post = await this.findById(id);
         if(!post) return false
-        return postsRepository.delete(id)
+        return this.postsRepository.delete(id)
     }
 }

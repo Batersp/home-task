@@ -1,17 +1,24 @@
 import {User} from "../types/user";
-import {usersRepository} from "../repositories/users.repository";
+import {UsersRepository} from "../repositories/users.repository";
 import {ObjectId} from "mongodb";
 import {UserInputDto} from "../dto/user.input-dto";
 import {bcryptService} from "../../core/services/bcrypt.service";
 import {UserViewModel} from "../types/user-view-model";
-import {usersQwRepository} from "../repositories/usersQw.repository";
+import {UsersQwRepository} from "../repositories/usersQw.repository";
+import {inject, injectable} from "inversify";
 
-export const usersService = {
+@injectable()
+export class UsersService {
+
+    constructor(
+        @inject(UsersRepository) private usersRepository: UsersRepository,
+        @inject(UsersQwRepository) private usersQwRepository: UsersQwRepository
+    ) {}
 
     async create(dto: UserInputDto): Promise<UserViewModel | null> {
         const {login, password, email} = dto
-        const existingUserByEmail = await usersRepository.findByEmail(email)
-        const existingUserByLogin = await usersRepository.findByLogin(login)
+        const existingUserByEmail = await this.usersRepository.findByEmail(email)
+        const existingUserByLogin = await this.usersRepository.findByLogin(login)
         if (existingUserByEmail || existingUserByLogin) {
             return null
         }
@@ -23,11 +30,11 @@ export const usersService = {
             createdAt: new Date().toISOString(),
             passHash: hash,
         }
-        const createdUserId = await usersRepository.create(user);
-        return await usersQwRepository.findById(createdUserId)
-    },
+        const createdUserId = await this.usersRepository.create(user);
+        return await this.usersQwRepository.findById(createdUserId)
+    }
 
     async delete(id: ObjectId): Promise<boolean> {
-        return usersRepository.delete(id)
+        return this.usersRepository.delete(id)
     }
 }

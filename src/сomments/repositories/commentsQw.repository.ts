@@ -4,8 +4,10 @@ import {ObjectId} from "mongodb";
 import {mapToCommentViewModel} from "../routers/mappers/map-to-comment-view-model.util";
 import {CommentsQuery} from "../../blogs/types/get-comments-query";
 import {PaginatedResponse} from "../../core/types/paginatedResponse";
+import {injectable} from "inversify";
 
-export const commentsQwRepository = {
+@injectable()
+export class CommentsQwRepository {
     async findMany(query: CommentsQuery, postId?: string): Promise<PaginatedResponse<CommentViewModel>> {
 
         const {
@@ -37,7 +39,7 @@ export const commentsQwRepository = {
             page: pageNumber,
             pagesCount: Math.ceil(totalCount / pageSize)
         };
-    },
+    }
 
     async findById(id: string): Promise<CommentViewModel | null> {
         const comment = await commentCollection.findOne({_id: new ObjectId(id)});

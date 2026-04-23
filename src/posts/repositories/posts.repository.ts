@@ -2,17 +2,19 @@ import {Post} from "../types/post";
 import {PostInputDto} from "../dto/post.input-dto";
 import {ObjectId, WithId} from "mongodb";
 import {postCollection} from "../../db/mongo.db";
+import {injectable} from "inversify";
 
-export const postsRepository = {
+@injectable()
+export class PostsRepository {
 
     async findById(id: string): Promise<WithId<Post> | null> {
         return postCollection.findOne({_id: new ObjectId(id)});
-    },
+    }
 
     async create(post: Post): Promise<ObjectId> {
         const createdResult = await postCollection.insertOne(post);
         return createdResult.insertedId;
-    },
+    }
 
     async update(id: string, dto: PostInputDto): Promise<boolean> {
         const {title, shortDescription, content, blogId} = dto
@@ -23,7 +25,7 @@ export const postsRepository = {
             {$set: {title, shortDescription, content, blogId}},
         )
         return updatedResult.matchedCount > 0
-    },
+    }
 
     async delete(id: string):Promise<boolean> {
         const deletedResult = await postCollection.deleteOne({_id: new ObjectId(id)});
