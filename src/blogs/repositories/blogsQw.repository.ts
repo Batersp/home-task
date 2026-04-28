@@ -1,10 +1,10 @@
 import {BlogsQuery} from "../types/get-blogs-query";
-import {blogCollection} from "../../db/mongo.db";
 import {mapToBlogViewModel} from "../routers/mappers/map-to-blog-view-model.util";
 import {ObjectId} from "mongodb";
 import {BlogViewModel} from "../types/blog-view-model";
 import {PaginatedResponse} from "../../core/types/paginatedResponse";
 import {injectable} from "inversify";
+import {BlogModel} from "../../db/models/blog.model";
 
 @injectable()
 export class BlogsQwRepository {
@@ -27,20 +27,20 @@ export class BlogsQwRepository {
             }
         }
 
-        const items = await blogCollection
+        const items = await BlogModel
             .find(filter)
             .sort({[sortBy]: sortDirection, 'createdAt': sortDirection || -1})
             .skip(skip)
             .limit(pageSize)
-            .toArray();
+            .lean();
 
-        const totalCount = await blogCollection.countDocuments(filter);
+        const totalCount = await BlogModel.countDocuments(filter);
 
         return {items: items.map(mapToBlogViewModel), totalCount, pageSize, page: pageNumber, pagesCount: Math.ceil(totalCount / pageSize)};
     }
 
     async findById(id: string): Promise<BlogViewModel | null> {
-        const blog = await blogCollection.findOne({_id: new ObjectId(id)})
+        const blog = await BlogModel.findOne({_id: new ObjectId(id)}).lean()
         if (!blog) return null;
         return mapToBlogViewModel(blog)
     }

@@ -1,38 +1,35 @@
 import {Security, UpdateSessionDataType} from "../types/security";
-import {securityCollection} from "../../db/mongo.db";
+import {SecurityModel} from "../../db/models/security.model";
 
 export const securityRepository = {
     async createSession(sessionData: Security): Promise<boolean> {
-        const result = await securityCollection.insertOne(sessionData)
-        return !!result.insertedId
+        const sessionInstance = new SecurityModel(sessionData)
+        await sessionInstance.save()
+        return !!sessionInstance._id
     },
 
     async findCurrentSession(deviceId: string, iat: string): Promise<Security | null> {
-        return securityCollection.findOne({ deviceId, iat })
+        return SecurityModel.findOne({ deviceId, iat }).lean()
     },
 
     async findSessionByDeviceId(deviceId: string): Promise<Security | null> {
-        return securityCollection.findOne({ deviceId })
+        return SecurityModel.findOne({ deviceId }).lean()
     },
 
     async updateSession(deviceId: string, oldIat: string, data: UpdateSessionDataType): Promise<boolean> {
-        const res = await securityCollection.updateOne(
+        const res = await SecurityModel.updateOne(
             { deviceId, iat: oldIat },
-            { $set: {
-                    iat: data.iat,
-                    exp: data.exp,
-                    ip: data.ip,
-                }}
+            {iat: data.iat, exp: data.exp, ip: data.ip}
         )
         return res.matchedCount === 1
     },
 
     async deleteSession(deviceId: string): Promise<void> {
-        await securityCollection.deleteOne({ deviceId })
+        await SecurityModel.deleteOne({ deviceId })
     },
 
     async deleteAllSessionsExcludeCurrent(userId: string, deviceId: string): Promise<boolean> {
-        const res = await securityCollection.deleteMany({
+        const res = await SecurityModel.deleteMany({
             userId,
             deviceId: { $ne: deviceId }
         })

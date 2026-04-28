@@ -1,10 +1,10 @@
 import {UsersQuery} from "../types/get-users-query";
-import {userCollection} from "../../db/mongo.db";
 import {mapToUserViewModel} from "../routers/mappers/map-to-user-view-model.util";
 import {ObjectId} from "mongodb";
 import {UserViewModel} from "../types/user-view-model";
 import {PaginatedResponse} from "../../core/types/paginatedResponse";
 import {injectable} from "inversify";
+import {UserModel} from "../../db/models/user.model";
 
 @injectable()
 export class UsersQwRepository {
@@ -34,20 +34,20 @@ export class UsersQwRepository {
             filter.$or = orConditions;
         }
 
-        const items = await userCollection
+        const items = await UserModel
             .find(filter)
             .sort({[sortBy]: sortDirection, 'createdAt': sortDirection || -1})
             .skip(skip)
             .limit(pageSize)
-            .toArray();
+            .lean()
 
-        const totalCount = await userCollection.countDocuments(filter);
+        const totalCount = await UserModel.countDocuments(filter);
 
         return {items: items.map(mapToUserViewModel), totalCount, pageSize, page: pageNumber, pagesCount: Math.ceil(totalCount / pageSize)};
     }
 
     async findById(id: ObjectId): Promise<UserViewModel | null> {
-        const user = await userCollection.findOne({_id: id})
+        const user = await UserModel.findOne({_id: id}).lean()
         if(!user) return null;
         return mapToUserViewModel(user)
     }

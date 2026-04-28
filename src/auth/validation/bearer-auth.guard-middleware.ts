@@ -19,7 +19,7 @@ export const bearerAuthGuardMiddleware = (req: Request, res: Response, next: Nex
         const decodedToken = jwtService.verifyAccessToken(token);
         req.user = { userId: decodedToken.userId, userLogin: decodedToken.userLogin }
         next()
-    } catch {
+    } catch(e) {
         res.sendStatus(HttpStatus.Unauthorized);
     }
 

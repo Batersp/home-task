@@ -1,15 +1,15 @@
 import {Request, Response, NextFunction} from "express";
-import {rateLimitCollection} from "../../db/mongo.db";
 import {HttpStatus} from "../types/http-statuses";
+import {RateLimitModel} from "../../db/models/rateLimit.model";
 
 export async function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
     const ip = req.ip!
     const url = req.originalUrl
     const tenSecondsAgo = new Date(Date.now() - 10 * 1000)
 
-    await rateLimitCollection.insertOne({ ip, url, date: new Date() })
+    await RateLimitModel.insertOne({ ip, url, date: new Date() })
 
-    const count = await rateLimitCollection.countDocuments({
+    const count = await RateLimitModel.countDocuments({
         ip,
         url,
         date: { $gte: tenSecondsAgo }

@@ -1,7 +1,7 @@
 import {User} from "../types/user";
-import {userCollection} from "../../db/mongo.db";
 import {ObjectId, WithId} from "mongodb";
 import {injectable} from "inversify";
+import {UserModel} from "../../db/models/user.model";
 
 @injectable()
 export class UsersRepository {
@@ -11,28 +11,28 @@ export class UsersRepository {
             ? [{ login }, { email }]
             : [{ login }, { email: login }]
 
-        return userCollection.findOne({ $or: conditions })
+        return UserModel.findOne({ $or: conditions }).lean()
     }
 
     async findByEmail(email: string): Promise<WithId<User> | null> {
-        return userCollection.findOne({ email })
+        return UserModel.findOne({ email }).lean()
     }
 
     async findByLogin(login: string): Promise<WithId<User> | null> {
-        return userCollection.findOne({ login })
+        return UserModel.findOne({ login }).lean()
     }
 
     async findByConfirmationCode(code: string): Promise<WithId<User> | null> {
-        return await userCollection.findOne({"emailConfirmation.confirmationCode": code})
+        return await UserModel.findOne({"emailConfirmation.confirmationCode": code}).lean()
     }
 
     async updateConfirmation(userId: ObjectId): Promise<boolean> {
-        const res = await userCollection.updateOne({_id: userId}, {$set: {"emailConfirmation.isConfirmed": true}})
+        const res = await UserModel.updateOne({_id: userId}, {$set: {"emailConfirmation.isConfirmed": true}})
         return res.modifiedCount === 1
     }
 
     async updateConfirmationCode(id: ObjectId, code: string, expirationDate: string): Promise<boolean> {
-        const res = await userCollection.updateOne(
+        const res = await UserModel.updateOne(
             { _id: id },
             { $set: {
                     'emailConfirmation.confirmationCode': code,
@@ -43,28 +43,29 @@ export class UsersRepository {
     }
 
     async create(user: User): Promise<ObjectId> {
-        const createResult = await userCollection.insertOne(user)
-        return createResult.insertedId
+        const userInstance = new UserModel(user)
+        await userInstance.save()
+        return userInstance._id
     }
 
     async delete(id: ObjectId): Promise<boolean> {
-        const deletedResult = await userCollection.deleteOne({_id: id})
+        const deletedResult = await UserModel.deleteOne({_id: id})
         return deletedResult.deletedCount >= 1;
     }
 
     async savePasswordRecoveryCode(userId: ObjectId, code: string, expirationDate: Date) {
-        await userCollection.updateOne(
+        await UserModel.updateOne(
             {_id: userId},
             {$set: {'passwordRecovery.recoveryCode': code, 'passwordRecovery.expirationDate': expirationDate}}
         )
     }
 
     async findByRecoveryCode(code: string): Promise<WithId<User> | null> {
-        return userCollection.findOne({'passwordRecovery.recoveryCode': code})
+        return UserModel.findOne({'passwordRecovery.recoveryCode': code}).lean()
     }
 
     async updatePassword(userId: ObjectId, passHash: string) {
-        await userCollection.updateOne(
+        await UserModel.updateOne(
             {_id: userId},
             {$set: {passHash}, $unset: {passwordRecovery: ''}}
         )

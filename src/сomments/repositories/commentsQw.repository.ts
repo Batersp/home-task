@@ -1,10 +1,10 @@
 import {CommentViewModel} from "../types/comment-view-model";
-import {commentCollection} from "../../db/mongo.db";
 import {ObjectId} from "mongodb";
 import {mapToCommentViewModel} from "../routers/mappers/map-to-comment-view-model.util";
 import {CommentsQuery} from "../../blogs/types/get-comments-query";
 import {PaginatedResponse} from "../../core/types/paginatedResponse";
 import {injectable} from "inversify";
+import {CommentModel} from "../../db/models/comment.model";
 
 @injectable()
 export class CommentsQwRepository {
@@ -23,14 +23,14 @@ export class CommentsQwRepository {
             filter.postId = postId
         }
 
-        const items = await commentCollection
+        const items = await CommentModel
             .find(filter)
             .sort({[sortBy]: sortDirection, 'createdAt': sortDirection || -1})
             .skip(skip)
             .limit(pageSize)
-            .toArray();
+            .lean();
 
-        const totalCount = await commentCollection.countDocuments(filter);
+        const totalCount = await CommentModel.countDocuments(filter);
 
         return {
             items: items.map(mapToCommentViewModel),
@@ -42,7 +42,7 @@ export class CommentsQwRepository {
     }
 
     async findById(id: string): Promise<CommentViewModel | null> {
-        const comment = await commentCollection.findOne({_id: new ObjectId(id)});
+        const comment = await CommentModel.findOne({_id: new ObjectId(id)}).lean();
         if(!comment) return null;
         return mapToCommentViewModel(comment);
     }
