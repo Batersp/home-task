@@ -5,12 +5,15 @@ import {commentInputDtoValidation} from "../validation/comment.input-dto.validat
 import {bearerAuthGuardMiddleware} from "../../auth/validation/bearer-auth.guard-middleware";
 import {container} from "../../iocContainer";
 import {CommentsController} from "../controllers/comments.controller";
+import {likeStatusInputDtoValidation} from "../validation/likeStatus.input-dto.validation-middlewares";
+import {optionalBearerAuthMiddleware} from "../../auth/validation/optionalBearer-auth.guard-middleware";
 
 const commentsController = container.get(CommentsController);
 
 export const commentsRouter = Router({});
 
 commentsRouter
-    .get('/:id', idValidation, inputValidationResultMiddleware, commentsController.getComment.bind(commentsController))
+    .get('/:id', optionalBearerAuthMiddleware, idValidation, inputValidationResultMiddleware, commentsController.getComment.bind(commentsController))
     .put('/:id', bearerAuthGuardMiddleware, idValidation, commentInputDtoValidation, inputValidationResultMiddleware, commentsController.updateComment.bind(commentsController))
+    .put('/:id/like-status', bearerAuthGuardMiddleware, idValidation, likeStatusInputDtoValidation, inputValidationResultMiddleware, commentsController.updateLikeStatus.bind(commentsController))
     .delete('/:id', bearerAuthGuardMiddleware, idValidation, inputValidationResultMiddleware, commentsController.deleteComment.bind(commentsController))

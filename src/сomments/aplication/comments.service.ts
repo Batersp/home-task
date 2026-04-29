@@ -1,7 +1,7 @@
 import {CommentInputDto} from "../dto/comment.input-dto";
 import {CommentsRepository} from "../repositories/comments.repository";
 import {WithId} from "mongodb";
-import {Comment, CommentatorInfo} from "../types/comment";
+import {Comment, CommentatorInfo, LIKE_STATUS} from "../types/comment";
 import {PostsService} from "../../posts/aplication/posts.service";
 import {CommentViewModel} from "../types/comment-view-model";
 import {CommentsQwRepository} from "../repositories/commentsQw.repository";
@@ -30,7 +30,8 @@ export class CommentsService {
             content,
             postId,
             commentatorInfo,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            likesInfo: []
         }
         const createdCommentId = await this.commentsRepository.create(comment)
         return await this.commentsQwRepository.findById(createdCommentId.toString())
@@ -86,6 +87,23 @@ export class CommentsService {
         }
         return {
             status: ResultStatus.InternalError,
+            extensions: [],
+            data: null
+        }
+    }
+
+    async updateLikeStatus(commentId: string, userId: string, likeStatus: LIKE_STATUS): Promise<Result> {
+        const comment = await this.commentsRepository.findById(commentId);
+        if(!comment) return {
+            status: ResultStatus.NotFound,
+            extensions: [],
+            data: null
+        }
+
+        await this.commentsRepository.updateLikeStatus(commentId, userId, likeStatus)
+
+        return {
+            status: ResultStatus.NoContent,
             extensions: [],
             data: null
         }

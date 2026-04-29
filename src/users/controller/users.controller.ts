@@ -42,7 +42,8 @@ export class UsersController {
             }
 
             res.status(HttpStatus.Created).send(createdUser)
-        } catch {
+        } catch(e) {
+            console.log(e)
             res.sendStatus(HttpStatus.InternalServerError)
         }
     }

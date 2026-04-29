@@ -36,7 +36,7 @@ export class AuthService {
         const accessToken = jwtService.createAccessToken({
             userId: user._id.toString(),
             userLogin: user.login,
-            expiresIn: '1h'
+            expiresIn: '15m'
         })
         const refreshToken = jwtService.createRefreshToken({
             userId: user._id.toString(),
@@ -149,7 +149,7 @@ export class AuthService {
         const oldIat = Utils.convertJwtDateToISO(iat)
 
         const accessToken = jwtService.createAccessToken({
-            userId, userLogin, expiresIn: '10s'
+            userId, userLogin, expiresIn: '15m'
         })
         const refreshToken = jwtService.createRefreshToken({
             userId, userLogin, deviceId

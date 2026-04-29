@@ -12,7 +12,7 @@ export const jwtService = {
 
     createRefreshToken(data: RefreshTokenInfoType): string {
         const {userId, userLogin, deviceId} = data
-        return jwt.sign({ userId, userLogin, deviceId }, process.env.REFRESH_TOKEN_SECRET as string, { expiresIn: '20s' })
+        return jwt.sign({ userId, userLogin, deviceId }, process.env.REFRESH_TOKEN_SECRET as string, { expiresIn: '1h' })
     },
 
     verifyAccessToken(token: string): AccessTokenInfoType {

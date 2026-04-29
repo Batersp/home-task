@@ -63,7 +63,7 @@ export class PostsController {
                 locations: ['query'],
                 includeOptionals: true,
             })
-            const commentsResponse = await this.commentsQwRepository.findMany(sanitizedQuery, req.params.id);
+            const commentsResponse = await this.commentsQwRepository.findMany(sanitizedQuery, req.params.id, req.user?.userId);
             res.status(HttpStatus.Ok).send(commentsResponse);
         } catch {
             res.sendStatus(HttpStatus.InternalServerError)
@@ -77,7 +77,7 @@ export class PostsController {
                 res.status(HttpStatus.Created).send(createdPost)
                 return
             }
-            res.sendStatus(HttpStatus.InternalServerError)
+            res.sendStatus(HttpStatus.NotFound)
         } catch {
             res.sendStatus(HttpStatus.InternalServerError)
         }

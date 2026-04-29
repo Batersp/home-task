@@ -8,6 +8,7 @@ import {bearerAuthGuardMiddleware} from "../../auth/validation/bearer-auth.guard
 import {commentInputDtoValidation} from "../../сomments/validation/comment.input-dto.validation-middlewares";
 import {PostsController} from "../controllers/posts.controller";
 import {container} from "../../iocContainer";
+import {optionalBearerAuthMiddleware} from "../../auth/validation/optionalBearer-auth.guard-middleware";
 
 const postsController = container.get(PostsController);
 
@@ -16,7 +17,7 @@ export const postsRouter = Router({})
 postsRouter
     .get('', postPaginationAndSortingValidation, inputValidationResultMiddleware, postsController.getPosts.bind(postsController))
     .get('/:id', idValidation, inputValidationResultMiddleware, postsController.getPost.bind(postsController))
-    .get('/:id/comments', idValidation, postPaginationAndSortingValidation, inputValidationResultMiddleware, postsController.getComments.bind(postsController))
+    .get('/:id/comments',optionalBearerAuthMiddleware, idValidation, postPaginationAndSortingValidation, inputValidationResultMiddleware, postsController.getComments.bind(postsController))
     .post('', superAdminGuardMiddleware, postInputDtoValidation, inputValidationResultMiddleware, postsController.createPost.bind(postsController))
     .post('/:id/comments', bearerAuthGuardMiddleware, idValidation, commentInputDtoValidation, inputValidationResultMiddleware, postsController.createComment.bind(postsController))
     .put('/:id', superAdminGuardMiddleware, idValidation, postInputDtoValidation, inputValidationResultMiddleware, postsController.updatePost.bind(postsController))

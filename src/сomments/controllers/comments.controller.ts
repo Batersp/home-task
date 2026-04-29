@@ -6,6 +6,7 @@ import {CommentViewModel} from "../types/comment-view-model";
 import {CommentInputDto} from "../dto/comment.input-dto";
 import {CommentsService} from "../aplication/comments.service";
 import {resultStatusToHttpStatus} from "../../core/types/result";
+import {LikeStatusInputDto} from "../dto/likeStatus.input-dto";
 
 @injectable()
 export class CommentsController {
@@ -17,7 +18,7 @@ export class CommentsController {
 
     async getComment(req: Request<{id: string}>, res: Response<CommentViewModel>) {
         try {
-            const comment = await this.commentsQwRepository.findById(req.params.id);
+            const comment = await this.commentsQwRepository.findById(req.params.id, req.user?.userId);
             if (comment) {
                 res.status(HttpStatus.Ok).send(comment);
                 return;
@@ -42,6 +43,15 @@ export class CommentsController {
             const result = await this.commentsService.delete(req.params.id, req.user!.userId);
             res.sendStatus(resultStatusToHttpStatus[result.status]);
 
+        } catch {
+            res.sendStatus(HttpStatus.InternalServerError)
+        }
+    }
+
+    async updateLikeStatus(req: Request<{id: string}, {}, LikeStatusInputDto>, res: Response) {
+        try {
+            const result = await this.commentsService.updateLikeStatus(req.params.id, req.user!.userId, req.body.likeStatus)
+            res.sendStatus(resultStatusToHttpStatus[result.status]);
         } catch {
             res.sendStatus(HttpStatus.InternalServerError)
         }

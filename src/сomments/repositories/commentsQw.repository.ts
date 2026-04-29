@@ -8,7 +8,7 @@ import {CommentModel} from "../../db/models/comment.model";
 
 @injectable()
 export class CommentsQwRepository {
-    async findMany(query: CommentsQuery, postId?: string): Promise<PaginatedResponse<CommentViewModel>> {
+    async findMany(query: CommentsQuery, postId?: string, userId?: string): Promise<PaginatedResponse<CommentViewModel>> {
 
         const {
             pageNumber,
@@ -33,7 +33,7 @@ export class CommentsQwRepository {
         const totalCount = await CommentModel.countDocuments(filter);
 
         return {
-            items: items.map(mapToCommentViewModel),
+            items: items.map(item =>  mapToCommentViewModel(item, userId)),
             totalCount,
             pageSize,
             page: pageNumber,
@@ -41,9 +41,9 @@ export class CommentsQwRepository {
         };
     }
 
-    async findById(id: string): Promise<CommentViewModel | null> {
+    async findById(id: string, userId?: string): Promise<CommentViewModel | null> {
         const comment = await CommentModel.findOne({_id: new ObjectId(id)}).lean();
         if(!comment) return null;
-        return mapToCommentViewModel(comment);
+        return mapToCommentViewModel(comment, userId);
     }
 }

@@ -8,7 +8,7 @@ const userSchema = new Schema<User>({
     passHash: {type: String, required: true, minlength: 1, maxlength: 1000},
     emailConfirmation: {
         type: {
-            confirmationCode: {type: String, required: true, unique: true, minlength: 1, maxlength: 1000},
+            confirmationCode: {type: String, required: true, minlength: 1, maxlength: 1000},
             expirationDate: {type: Date, required: true},
             isConfirmed: {type: Boolean, required: true},
         },
