@@ -1,5 +1,4 @@
 import {LoginInputDto} from "../dto/login.input-dto";
-import {User} from "../../users/types/user";
 import {RegistrationInputDTO} from "../dto/registration.input-dto";
 import {bcryptService} from "../../core/services/bcrypt.service";
 import {randomUUID} from "node:crypto";
@@ -11,6 +10,7 @@ import {Utils} from "../../core/utils/utils";
 import {SecurityService} from "../../security/application/security.service";
 import {inject, injectable} from "inversify";
 import {UsersRepository} from "../../users/repositories/users.repository";
+import {UserModel} from "../../users/domain/user.entity";
 
 @injectable()
 export class AuthService {
@@ -79,8 +79,7 @@ export class AuthService {
         }
 
         const passHash = bcryptService.createHash(password)
-
-        const newUser: User = {
+        const newUser = UserModel.createUser({
             login,
             email,
             passHash,
@@ -93,10 +92,9 @@ export class AuthService {
                 }),
                 isConfirmed: false
             }
-        };
+        })
 
-        await this.userRepository.create(newUser);
-
+        await this.userRepository.save(newUser);
         await emailManagers.sendConfirmationCode(newUser.email, newUser.emailConfirmation!.confirmationCode)
         return {
             status: ResultStatus.NoContent,
@@ -120,8 +118,8 @@ export class AuthService {
         if (user.emailConfirmation.expirationDate < new Date()) return resultError
         if (user.emailConfirmation.isConfirmed) return resultError
 
-        const isUpdated = await this.userRepository.updateConfirmation(user._id)
-        if (!isUpdated) return resultError
+        user.confirmCode()
+        await this.userRepository.save(user)
         return {
             status: ResultStatus.NoContent,
             extensions: [],
@@ -136,7 +134,8 @@ export class AuthService {
 
         const newCode = randomUUID()
         const newExpiration = add(new Date(), {hours: 1, minutes: 30}).toISOString()
-        await this.userRepository.updateConfirmationCode(user._id, newCode, newExpiration)
+        user.updateConfirmationEmail(newCode, newExpiration)
+        await this.userRepository.save(user)
         await emailManagers.sendConfirmationCode(email, newCode)
         return true
     }
@@ -187,7 +186,8 @@ export class AuthService {
         const code = randomUUID()
         const expirationDate = add(new Date(), {hours: 1})
 
-        await this.userRepository.savePasswordRecoveryCode(user._id, code, expirationDate)
+        user.savePasswordRecoveryCode(code, expirationDate)
+        await this.userRepository.save(user)
         await emailManagers.sendPasswordRecovery(email, code)
     }
 
@@ -204,7 +204,8 @@ export class AuthService {
         if (user.passwordRecovery.expirationDate < new Date()) return errorResult
 
         const passHash = bcryptService.createHash(newPassword)
-        await this.userRepository.updatePassword(user._id, passHash)
+        user.updatePassword(passHash)
+        await this.userRepository.save(user)
 
         return {status: ResultStatus.NoContent, extensions: [], data: null}
     }

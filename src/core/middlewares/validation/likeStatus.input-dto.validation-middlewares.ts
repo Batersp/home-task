@@ -1,5 +1,5 @@
 import {body} from "express-validator";
-import {LIKE_STATUS} from "../types/comment";
+import {LIKE_STATUS} from "../../enums/like.enum";
 
 const allowedStatuses = Object.values(LIKE_STATUS);
 

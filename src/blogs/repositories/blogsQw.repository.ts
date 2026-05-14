@@ -4,7 +4,7 @@ import {ObjectId} from "mongodb";
 import {BlogViewModel} from "../types/blog-view-model";
 import {PaginatedResponse} from "../../core/types/paginatedResponse";
 import {injectable} from "inversify";
-import {BlogModel} from "../../db/models/blog.model";
+import {BlogModel} from "../domain/blog.entity";
 
 @injectable()
 export class BlogsQwRepository {

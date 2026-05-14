@@ -60,7 +60,7 @@ export class BlogsController {
                 locations: ['query'],
                 includeOptionals: true,
             })
-            const postsResponse = await this.postsQwRepository.findMany(sanitizedQuery, req.params.id);
+            const postsResponse = await this.postsQwRepository.findMany(sanitizedQuery, req.params.id, req.user?.userId);
             res.status(HttpStatus.Ok).send(postsResponse)
         } catch {
             res.sendStatus(HttpStatus.InternalServerError)
@@ -88,7 +88,10 @@ export class BlogsController {
                 blogId: req.params.id,
                 content,
                 title,
-                shortDescription
+                shortDescription,
+                dislikesCount: 0,
+                likesCount: 0,
+                newestLikes: []
             })
             if (createdPost) {
                 res.status(HttpStatus.Created).send(createdPost)

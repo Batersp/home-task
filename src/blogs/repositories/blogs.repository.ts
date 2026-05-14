@@ -1,31 +1,17 @@
-import {Blog} from "../types/blog";
-import {BlogInputDto} from "../dto/blog.input-dto";
-import {ObjectId, WithId} from "mongodb";
+import {ObjectId} from "mongodb";
 import {injectable} from "inversify";
-import {BlogModel} from "../../db/models/blog.model";
+import {BlogDocument, BlogModel} from "../domain/blog.entity";
 
 @injectable()
 export class BlogsRepository {
 
-    async findById(id: string): Promise<WithId<Blog> | null> {
-        return BlogModel.findOne({_id: new ObjectId(id)}).lean()
+    async findById(id: string) {
+        return BlogModel.findOne({_id: new ObjectId(id)})
     }
 
-    async create(blog: Blog): Promise<ObjectId> {
-        const blogInstance = new BlogModel(blog);
-        await blogInstance.save()
-        return blogInstance._id
-    }
-
-    async update(id: string, dto: BlogInputDto): Promise<boolean> {
-        const {name, description, websiteUrl} = dto
-        const blog = await BlogModel.findById(id)
-        if(!blog) return false
-        blog.name = name
-        blog.description = description
-        blog.websiteUrl = websiteUrl
-        await blog.save()
-        return true
+    async save(blog: BlogDocument) {
+        const saved = await blog.save()
+        return saved._id
     }
 
     async delete(id: string) {

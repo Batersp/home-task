@@ -1,29 +1,31 @@
-import {Post} from "../types/post";
-import {PostInputDto} from "../dto/post.input-dto";
-import {ObjectId, WithId} from "mongodb";
+import {ObjectId} from "mongodb";
 import {injectable} from "inversify";
-import {PostModel} from "../../db/models/post.model";
+import {PostDocument, PostModel} from "../domain/post.entity";
+import {PostLikesModel} from "../../db/models/postLikes.model";
+import {PostLike} from "../../core/types/postLikesCollection";
 
 @injectable()
 export class PostsRepository {
 
-    async findById(id: string): Promise<WithId<Post> | null> {
-        return PostModel.findOne({_id: new ObjectId(id)}).lean();
+    async findById(id: string) {
+        return PostModel.findOne({_id: new ObjectId(id)});
     }
 
-    async create(post: Post): Promise<ObjectId> {
-        const postInstance = new PostModel(post);
-        await postInstance.save()
-        return postInstance._id
+    async save(post: PostDocument): Promise<ObjectId> {
+        const saved = await post.save()
+        return saved._id
     }
 
-    async update(id: string, dto: PostInputDto): Promise<boolean> {
-        const {title, shortDescription, content, blogId} = dto
-        const updatedResult = await PostModel.updateOne(
-            {_id: new ObjectId(id)},
-            {title, shortDescription, content, blogId},
+    async findLike(postId: string, userId: string): Promise<PostLike | null> {
+        return PostLikesModel.findOne({postId, userId}).lean()
+    }
+
+    async saveLike(like: PostLike) {
+        await PostLikesModel.findOneAndUpdate(
+            {postId: like.postId, userId: like.userId},
+            {$set: like},
+            {upsert: true}
         )
-        return updatedResult.matchedCount > 0
     }
 
     async delete(id: string):Promise<boolean> {

@@ -10,6 +10,7 @@ import {
 } from "../../posts/validation/post.paginationAndSorting.validation-middlewares";
 import {container} from "../../iocContainer";
 import {BlogsController} from "../controllers/blogs.controller";
+import {optionalBearerAuthMiddleware} from "../../auth/validation/optionalBearer-auth.guard-middleware";
 
 const blogsController = container.get(BlogsController);
 
@@ -18,7 +19,7 @@ export const blogsRouter = Router({})
 blogsRouter
     .get('', blogsPaginationAndSortingValidation, inputValidationResultMiddleware, blogsController.getBlogs.bind(blogsController))
     .get('/:id', idValidation, inputValidationResultMiddleware, blogsController.getBlog.bind(blogsController))
-    .get('/:id/posts', idValidation, postPaginationAndSortingValidation, inputValidationResultMiddleware, blogsController.getBlogPosts.bind(blogsController))
+    .get('/:id/posts', optionalBearerAuthMiddleware, idValidation, postPaginationAndSortingValidation, inputValidationResultMiddleware, blogsController.getBlogPosts.bind(blogsController))
     .post('', superAdminGuardMiddleware, blogInputDtoValidation, inputValidationResultMiddleware, blogsController.createBlog.bind(blogsController))
     .post('/:id/posts', superAdminGuardMiddleware, blogCreatePostDtoValidationMiddlewares, inputValidationResultMiddleware, blogsController.createPostForBlog.bind(blogsController))
     .put('/:id', superAdminGuardMiddleware, idValidation, blogInputDtoValidation, inputValidationResultMiddleware, blogsController.updateBlog.bind(blogsController))

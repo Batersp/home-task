@@ -1,6 +1,7 @@
 import {WithId} from "mongodb";
 import {CommentViewModel} from "../../types/comment-view-model";
-import {Comment, LIKE_STATUS} from "../../types/comment";
+import {Comment} from "../../types/comment";
+import {LIKE_STATUS} from "../../../core/enums/like.enum";
 
 export function mapToCommentViewModel(comment: WithId<Comment>, userId?: string): CommentViewModel {
     const {_id, content, commentatorInfo, createdAt, likesInfo} = comment;

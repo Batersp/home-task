@@ -1,3 +1,5 @@
+import {LIKE_STATUS} from "../../core/enums/like.enum";
+
 export type Comment = {
     content: string,
     createdAt: string
@@ -14,10 +16,4 @@ export type CommentatorInfo = {
 export type LikesInfo = {
     userId: string,
     status: LIKE_STATUS
-}
-
-export enum LIKE_STATUS {
-    LIKE = "Like",
-    DISLIKE = "Dislike",
-    NONE = "None",
 }

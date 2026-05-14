@@ -1,7 +1,7 @@
 import {SecurityViewModel} from "../types/security-view-model";
 import {mapToSecurityViewModel} from "../routers/mappers/map-to-security-view-model.util";
 import {injectable} from "inversify";
-import {SecurityModel} from "../../db/models/security.model";
+import {SecurityModel} from "../domain/security.entity";
 
 @injectable()
 export class SecurityQwRepository {

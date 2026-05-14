@@ -1,10 +1,9 @@
-import {Blog} from "../types/blog";
-import {WithId} from "mongodb";
 import {BlogsRepository} from "../repositories/blogs.repository";
 import {BlogInputDto} from "../dto/blog.input-dto";
 import {BlogViewModel} from "../types/blog-view-model";
 import {inject, injectable} from "inversify";
 import {BlogsQwRepository} from "../repositories/blogsQw.repository";
+import {BlogModel} from "../domain/blog.entity";
 
 @injectable()
 export class BlogsService {
@@ -14,28 +13,23 @@ export class BlogsService {
         @inject(BlogsQwRepository) private blogsQwRepository: BlogsQwRepository
     ) {}
 
-    async findById(id: string): Promise<WithId<Blog> | null> {
+    async findById(id: string) {
         return this.blogsRepository.findById(id);
     }
 
     async create(dto: BlogInputDto): Promise<BlogViewModel | null> {
-        const {name, description, websiteUrl} = dto;
-        const blog: Blog = {
-            name,
-            description,
-            websiteUrl,
-            createdAt: new Date().toISOString(),
-            isMembership: false,
-        }
-        const createdBlogId = await this.blogsRepository.create(blog);
+        const blog = BlogModel.createBlog(dto)
+        const createdBlogId = await this.blogsRepository.save(blog);
         return await this.blogsQwRepository.findById(createdBlogId.toString());
     }
 
     async update(id: string, dto: BlogInputDto): Promise<boolean> {
-        const blog = await this.findById(id);
+        const blog = await this.blogsRepository.findById(id)
         if (!blog) return false
 
-        return this.blogsRepository.update(id, dto);
+        blog.update(dto)
+        await this.blogsRepository.save(blog)
+        return true
     }
 
     async delete(id: string): Promise<boolean> {

@@ -1,4 +1,5 @@
-import {CommentatorInfo, LIKE_STATUS} from "./comment";
+import {CommentatorInfo} from "./comment";
+import {LIKE_STATUS} from "../../core/enums/like.enum";
 
 export type CommentViewModel = {
     id: string,

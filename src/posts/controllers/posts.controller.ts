@@ -14,6 +14,8 @@ import {Post} from "../types/post";
 import {PostInputDto} from "../dto/post.input-dto";
 import {PostsService} from "../aplication/posts.service";
 import {CommentsService} from "../../сomments/aplication/comments.service";
+import {LikeStatusInputDto} from "../dto/likeStatus.input-dto";
+import {resultStatusToHttpStatus} from "../../core/types/result";
 
 @injectable()
 export class PostsController {
@@ -32,7 +34,7 @@ export class PostsController {
                 locations: ['query'],
                 includeOptionals: true,
             })
-            const postsResponse = await this.postsQwRepository.findMany(sanitizedQuery)
+            const postsResponse = await this.postsQwRepository.findMany(sanitizedQuery, undefined, req.user?.userId)
             res.status(HttpStatus.Ok).send(postsResponse)
         } catch {
             res.sendStatus(HttpStatus.InternalServerError)
@@ -41,7 +43,7 @@ export class PostsController {
 
     async getPost(req: Request<{id: string}>, res: Response<PostViewModel>) {
         try {
-            const post = await this.postsQwRepository.findById(req.params.id);
+            const post = await this.postsQwRepository.findById(req.params.id, req.user?.userId);
             if (post) {
                 res.status(HttpStatus.Ok).send(post);
                 return;
@@ -108,6 +110,15 @@ export class PostsController {
                 return;
             }
             res.sendStatus(HttpStatus.NotFound)
+        } catch {
+            res.sendStatus(HttpStatus.InternalServerError)
+        }
+    }
+
+    async updateLikeStatus(req: Request<{id: string}, {}, LikeStatusInputDto>, res: Response) {
+        try {
+            const result = await this.postsService.updateLikeStatus(req.params.id, req.user!.userId, req.user!.userLogin, req.body.likeStatus)
+            res.sendStatus(resultStatusToHttpStatus[result.status]);
         } catch {
             res.sendStatus(HttpStatus.InternalServerError)
         }

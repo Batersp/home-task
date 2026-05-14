@@ -4,7 +4,7 @@ import {mapToCommentViewModel} from "../routers/mappers/map-to-comment-view-mode
 import {CommentsQuery} from "../../blogs/types/get-comments-query";
 import {PaginatedResponse} from "../../core/types/paginatedResponse";
 import {injectable} from "inversify";
-import {CommentModel} from "../../db/models/comment.model";
+import {CommentModel} from "../domain/comment.entity";
 
 @injectable()
 export class CommentsQwRepository {

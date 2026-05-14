@@ -22,6 +22,7 @@ import {TestingController} from "./testing/controllers/testing.controller";
 import {UsersService} from "./users/aplication/users.service";
 import {UsersController} from "./users/controller/users.controller";
 import {CommentsController} from "./сomments/controllers/comments.controller";
+import {SecurityRepository} from "./security/repositories/security.repository";
 
 export const container = new Container();
 
@@ -50,4 +51,5 @@ container.bind(PostsRepository).to(PostsRepository);
 container.bind(PostsQwRepository).to(PostsQwRepository);
 container.bind(CommentsRepository).to(CommentsRepository);
 container.bind(CommentsQwRepository).to(CommentsQwRepository);
+container.bind(SecurityRepository).to(SecurityRepository);
 container.bind(SecurityQwRepository).to(SecurityQwRepository);

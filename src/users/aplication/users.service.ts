@@ -1,4 +1,3 @@
-import {User} from "../types/user";
 import {UsersRepository} from "../repositories/users.repository";
 import {ObjectId} from "mongodb";
 import {UserInputDto} from "../dto/user.input-dto";
@@ -6,6 +5,7 @@ import {bcryptService} from "../../core/services/bcrypt.service";
 import {UserViewModel} from "../types/user-view-model";
 import {UsersQwRepository} from "../repositories/usersQw.repository";
 import {inject, injectable} from "inversify";
+import {UserModel} from "../domain/user.entity";
 
 @injectable()
 export class UsersService {
@@ -24,13 +24,13 @@ export class UsersService {
         }
 
         const hash = bcryptService.createHash(password);
-        const user: User = {
+        const user = UserModel.createUser({
             login,
             email,
             createdAt: new Date().toISOString(),
             passHash: hash,
-        }
-        const createdUserId = await this.usersRepository.create(user);
+        })
+        const createdUserId = await this.usersRepository.save(user);
         return await this.usersQwRepository.findById(createdUserId)
     }
 

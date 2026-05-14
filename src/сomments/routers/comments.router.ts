@@ -5,7 +5,7 @@ import {commentInputDtoValidation} from "../validation/comment.input-dto.validat
 import {bearerAuthGuardMiddleware} from "../../auth/validation/bearer-auth.guard-middleware";
 import {container} from "../../iocContainer";
 import {CommentsController} from "../controllers/comments.controller";
-import {likeStatusInputDtoValidation} from "../validation/likeStatus.input-dto.validation-middlewares";
+import {likeStatusInputDtoValidation} from "../../core/middlewares/validation/likeStatus.input-dto.validation-middlewares";
 import {optionalBearerAuthMiddleware} from "../../auth/validation/optionalBearer-auth.guard-middleware";
 
 const commentsController = container.get(CommentsController);

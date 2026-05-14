@@ -1,12 +1,12 @@
 import {injectable} from "inversify";
 import {Request, Response} from "express";
 import {HttpStatus} from "../../core/types/http-statuses";
-import {BlogModel} from "../../db/models/blog.model";
-import {PostModel} from "../../db/models/post.model";
-import {CommentModel} from "../../db/models/comment.model";
-import {UserModel} from "../../db/models/user.model";
-import {SecurityModel} from "../../db/models/security.model";
 import {RateLimitModel} from "../../db/models/rateLimit.model";
+import {BlogModel} from "../../blogs/domain/blog.entity";
+import {CommentModel} from "../../сomments/domain/comment.entity";
+import {PostModel} from "../../posts/domain/post.entity";
+import {SecurityModel} from "../../security/domain/security.entity";
+import {UserModel} from "../../users/domain/user.entity";
 
 @injectable()
 export class TestingController {

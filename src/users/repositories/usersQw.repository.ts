@@ -4,7 +4,7 @@ import {ObjectId} from "mongodb";
 import {UserViewModel} from "../types/user-view-model";
 import {PaginatedResponse} from "../../core/types/paginatedResponse";
 import {injectable} from "inversify";
-import {UserModel} from "../../db/models/user.model";
+import {UserModel} from "../domain/user.entity";
 
 @injectable()
 export class UsersQwRepository {

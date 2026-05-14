@@ -1,12 +1,14 @@
 import {CommentInputDto} from "../dto/comment.input-dto";
 import {CommentsRepository} from "../repositories/comments.repository";
 import {WithId} from "mongodb";
-import {Comment, CommentatorInfo, LIKE_STATUS} from "../types/comment";
+import {Comment, CommentatorInfo} from "../types/comment";
 import {PostsService} from "../../posts/aplication/posts.service";
 import {CommentViewModel} from "../types/comment-view-model";
 import {CommentsQwRepository} from "../repositories/commentsQw.repository";
 import {Result, ResultStatus} from "../../core/types/result";
 import {inject, injectable} from "inversify";
+import {CommentModel} from "../domain/comment.entity";
+import {LIKE_STATUS} from "../../core/enums/like.enum";
 
 @injectable()
 export class CommentsService {
@@ -25,20 +27,13 @@ export class CommentsService {
         const post = await this.postsService.findById(postId);
         if (!post) return null;
 
-        const {content} = dto
-        const comment: Comment = {
-            content,
-            postId,
-            commentatorInfo,
-            createdAt: new Date().toISOString(),
-            likesInfo: []
-        }
-        const createdCommentId = await this.commentsRepository.create(comment)
+        const comment = CommentModel.createComment(postId, commentatorInfo, dto)
+        const createdCommentId = await this.commentsRepository.save(comment)
         return await this.commentsQwRepository.findById(createdCommentId.toString())
     }
 
     async update(commentId: string, dto: CommentInputDto, currentUserId: string): Promise<Result> {
-        const comment = await this.findById(commentId)
+        const comment = await this.commentsRepository.findById(commentId)
         if(!comment) return {
             status: ResultStatus.NotFound,
             extensions: [],
@@ -51,15 +46,10 @@ export class CommentsService {
             data: null
         }
 
-        const isUpdated = await this.commentsRepository.update(commentId, dto)
-        if(isUpdated) return {
-            status: ResultStatus.NoContent,
-            extensions: [],
-            data: null
-        }
-
+        comment.update(dto)
+        await this.commentsRepository.save(comment)
         return {
-            status: ResultStatus.InternalError,
+            status: ResultStatus.NoContent,
             extensions: [],
             data: null
         }
@@ -100,7 +90,8 @@ export class CommentsService {
             data: null
         }
 
-        await this.commentsRepository.updateLikeStatus(commentId, userId, likeStatus)
+        comment.updateLikeStatus(userId, likeStatus)
+        await this.commentsRepository.save(comment)
 
         return {
             status: ResultStatus.NoContent,
